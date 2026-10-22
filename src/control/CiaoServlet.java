@@ -23,8 +23,8 @@ public class CiaoServlet extends HttpServlet {
         if (nome == null || nome.isBlank()) {
             nome = "sconosciuto";
         }
-        req.setAttribute("nome", nome);                         // dato per la JSP
+        req.setAttribute("nome", nome);
         req.setAttribute("cognome",cognome);
-        req.getRequestDispatcher("/ciao.jsp").forward(req, resp); // la JSP genera l'HTML
+        req.getRequestDispatcher("/ciao.jsp").forward(req, resp);
     }
 }

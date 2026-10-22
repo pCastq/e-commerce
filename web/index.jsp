@@ -11,6 +11,7 @@
     <p>Tomcat sta servendo questa pagina JSP.</p>
     <ul>
         <li><a href="${pageContext.request.contextPath}/ciao?nome=Mario">Prova la servlet (MVC)</a></li>
+        <li><a href="${pageContext.request.contextPath}/test-db">Prova il database (pool)</a></li>
         <li><a href="${pageContext.request.contextPath}/pagina-che-non-esiste">Prova la pagina 404</a></li>
     </ul>
 </body>
