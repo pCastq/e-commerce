@@ -1,0 +1,255 @@
+/* ==========================================================================
+   ShopTSW - foglio di stile principale (mobile-first, responsive)
+   Indice: 1 Variabili | 2 Base | 3 Layout | 4 Header e menu | 5 Componenti
+           6 Form | 7 Tabelle | 8 Footer | 9 Tablet | 10 Desktop
+   ========================================================================== */
+
+/* 1. Variabili (colori e misure in un solo posto) */
+:root {
+    --primary: #2563eb;
+    --primary-dark: #1e3a8a;
+    --primary-soft: #dbeafe;
+    --bg: #f8fafc;
+    --surface: #ffffff;
+    --text: #0f172a;
+    --muted: #64748b;
+    --border: #e2e8f0;
+    --success: #15803d;
+    --success-soft: #dcfce7;
+    --danger: #b91c1c;
+    --danger-soft: #fee2e2;
+    --radius: 10px;
+    --shadow: 0 1px 3px rgba(15, 23, 42, .12);
+    --gutter: 16px;
+}
+
+/* 2. Base */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;       /* il footer resta in fondo anche con poco contenuto */
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: var(--text);
+    background: var(--bg);
+}
+
+img { max-width: 100%; height: auto; }
+
+a { color: var(--primary); }
+a:hover { color: var(--primary-dark); }
+
+h1, h2, h3 { line-height: 1.25; margin: 0 0 .6em; }
+h1 { font-size: 1.6rem; }
+h2 { font-size: 1.3rem; }
+
+/* 3. Layout */
+.container {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 var(--gutter);
+}
+
+main.container { flex: 1; padding-top: 24px; padding-bottom: 32px; }
+
+.grid {                         /* griglia generica (catalogo): 1 colonna su telefono */
+    display: grid;
+    gap: 16px;
+    grid-template-columns: 1fr;
+}
+
+/* 4. Header e menu */
+.site-header {
+    background: var(--primary-dark);
+    color: #fff;
+    box-shadow: var(--shadow);
+}
+
+.header-inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 16px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.brand {
+    color: #fff;
+    text-decoration: none;
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: .02em;
+}
+.brand span { color: #93c5fd; }
+.brand:hover { color: #fff; }
+
+.nav-toggle {                   /* bottone "hamburger": visibile solo su telefono */
+    background: transparent;
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, .5);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.site-nav {
+    display: none;              /* chiuso di default su telefono */
+    width: 100%;
+    flex-direction: column;
+    gap: 4px;
+}
+.site-nav.is-open { display: flex; }
+
+.site-nav a {
+    color: #fff;
+    text-decoration: none;
+    padding: 8px 10px;
+    border-radius: 6px;
+}
+.site-nav a:hover { background: rgba(255, 255, 255, .15); }
+.site-nav a.active { background: var(--primary); }
+
+.search-form { display: flex; gap: 6px; width: 100%; margin-top: 4px; }
+.search-form input {
+    flex: 1;
+    min-width: 0;
+    padding: 8px 10px;
+    border: 0;
+    border-radius: 6px;
+    font: inherit;
+}
+.search-form button {
+    padding: 8px 14px;
+    border: 0;
+    border-radius: 6px;
+    background: var(--primary);
+    color: #fff;
+    font: inherit;
+    cursor: pointer;
+}
+
+/* 5. Componenti */
+.card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow);
+}
+
+.hero {
+    background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+    color: #fff;
+    border-radius: var(--radius);
+    padding: 32px 20px;
+    margin-bottom: 24px;
+}
+.hero h1 { font-size: 1.8rem; }
+.hero p { margin: 0 0 16px; max-width: 40em; }
+
+.btn {
+    display: inline-block;
+    padding: 10px 18px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: var(--primary);
+    color: #fff;
+    font: inherit;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+}
+.btn:hover { background: var(--primary-dark); color: #fff; }
+.btn-light { background: #fff; color: var(--primary-dark); }
+.btn-light:hover { background: var(--primary-soft); color: var(--primary-dark); }
+.btn-danger { background: var(--danger); }
+.btn-danger:hover { background: #7f1d1d; }
+
+/* Messaggi di conferma / errore (niente alert() del browser) */
+.alert {
+    padding: 12px 14px;
+    border-radius: 8px;
+    border: 1px solid;
+    margin-bottom: 16px;
+}
+.alert-success { background: var(--success-soft); border-color: #86efac; color: var(--success); }
+.alert-error   { background: var(--danger-soft);  border-color: #fca5a5; color: var(--danger); }
+
+.dev-box { margin-top: 24px; font-size: .95rem; }
+.dev-box ul { margin: 0; padding-left: 20px; }
+
+/* 6. Form */
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-weight: 600; margin-bottom: 4px; }
+
+input[type="text"], input[type="email"], input[type="password"],
+input[type="number"], input[type="date"], input[type="search"],
+select, textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font: inherit;
+    background: #fff;
+}
+
+input:focus, select:focus, textarea:focus {          /* evidenzia il campo attivo */
+    outline: 3px solid var(--primary-soft);
+    border-color: var(--primary);
+}
+
+.field-error { display: none; margin-top: 4px; color: var(--danger); font-size: .9rem; }
+.has-error input, .has-error select, .has-error textarea { border-color: var(--danger); }
+.has-error .field-error { display: block; }
+
+/* Miniatura prodotto (altezza fissa, larghezza proporzionale) */
+img.thumb { height: 60px; width: auto; }
+
+/* 7. Tabelle (scorrono in orizzontale su telefono) */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; background: var(--surface); }
+th, td { padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: middle; }
+th { background: var(--primary-soft); }
+
+/* 8. Footer */
+.site-footer {
+    background: var(--primary-dark);
+    color: #cbd5e1;
+    font-size: .9rem;
+    padding: 16px 0;
+}
+.site-footer .container { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; }
+
+/* 9. Tablet (da 700px) */
+@media (min-width: 700px) {
+    .grid { grid-template-columns: repeat(2, 1fr); }
+    h1 { font-size: 1.9rem; }
+    .hero { padding: 48px 32px; }
+}
+
+/* 10. Desktop (da 960px): menu sempre visibile, in riga */
+@media (min-width: 960px) {
+    .nav-toggle { display: none; }
+    .header-inner { flex-wrap: nowrap; }
+    .site-nav {
+        display: flex;
+        width: auto;
+        flex-direction: row;
+        align-items: center;
+        flex: 1;
+        justify-content: flex-end;
+        gap: 4px;
+    }
+    .search-form { width: 300px; margin: 0 8px 0 0; }
+    .grid { grid-template-columns: repeat(3, 1fr); }
+}

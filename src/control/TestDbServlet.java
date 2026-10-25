@@ -27,7 +27,6 @@ public class TestDbServlet extends HttpServlet {
             List<Product> prodotti = new ProductDAO().findAllActive();
             req.setAttribute("prodotti", prodotti);
         } catch (SQLException e) {
-            // L'errore finisce nella pagina 500 configurata in web.xml
             throw new ServletException("Errore di accesso al database", e);
         }
         req.getRequestDispatcher("/test-db.jsp").forward(req, resp);

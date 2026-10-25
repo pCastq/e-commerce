@@ -12,4 +12,24 @@ INSERT INTO prodotti (nome, descrizione, prezzo, iva, giacenza, immagine) VALUES
 
 ('Detersivo Liquido Lavatrice 1,5 L',
  'Detersivo liquido concentrato per bucato bianco e colorato, circa 25 lavaggi. Profumo fresco.',
- 6.90, 22.00, 30, 'detersivo.jpg');
+ 6.90, 22.00, 30, 'detersivo.jpg'),
+
+('Pane Fresco Artigianale 500 g',
+ 'Pagnotta e filone di pane fresco a lievitazione naturale, croccante fuori e morbido dentro. Prodotto ogni giorno.',
+ 2.20, 4.00, 40, 'pane.jpg'),
+
+('Mele Rosse 1 kg',
+ 'Mele rosse croccanti e succose, ideali da mangiare al naturale o per le torte. Confezione da circa 1 kg.',
+ 2.49, 4.00, 80, 'mela.jpg'),
+
+('Shampoo Idratante 250 ml',
+ 'Shampoo delicato per uso quotidiano con formula idratante, per capelli morbidi e luminosi.',
+ 3.49, 22.00, 60, 'shampoo.jpg'),
+
+('Muesli Frutta e Noci 375 g',
+ 'Miscela di fiocchi di cereali, frutta secca, mirtilli e lamponi. Ottimo con latte o yogurt a colazione.',
+ 3.29, 10.00, 50, 'muesli.jpg'),
+
+('Biscotti al Cioccolato 350 g',
+ 'Frollini croccanti con gocce di cioccolato fondente, perfetti per la colazione o la merenda.',
+ 2.29, 10.00, 70, 'biscotti.jpg');
