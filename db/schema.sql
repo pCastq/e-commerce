@@ -20,8 +20,8 @@ CREATE TABLE prodotti (
     id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     nome        VARCHAR(150)  NOT NULL,
     descrizione TEXT          NOT NULL,
-    prezzo      NUMERIC(10,2) NOT NULL CHECK (prezzo >= 0),
-    iva         NUMERIC(4,2)  NOT NULL CHECK (iva >= 0),
+    prezzo      NUMERIC(10,2) NOT NULL CHECK (prezzo >= 0),   -- prezzo di vendita, IVA INCLUSA
+    iva         NUMERIC(4,2)  NOT NULL CHECK (iva >= 0),      -- percentuale IVA contenuta nel prezzo
     giacenza    INTEGER       NOT NULL DEFAULT 0 CHECK (giacenza >= 0),  -- pezzi disponibili (0 = non acquistabile)
     attivo      BOOLEAN       NOT NULL DEFAULT TRUE,   -- soft delete
     immagine    VARCHAR(255)                            -- facoltativa: nome del file
@@ -39,7 +39,7 @@ CREATE TABLE ordini_prodotti (
     id_ordine       INTEGER       NOT NULL REFERENCES ordini(id) ON DELETE CASCADE,
     id_prodotto     INTEGER       NOT NULL REFERENCES prodotti(id) ON DELETE RESTRICT,
     quantita        INTEGER       NOT NULL CHECK (quantita > 0),
-    prezzo_unitario NUMERIC(10,2) NOT NULL CHECK (prezzo_unitario >= 0),  -- prezzo al momento dell'acquisto
-    iva             NUMERIC(4,2)  NOT NULL CHECK (iva >= 0),              -- IVA al momento dell'acquisto
+    prezzo_unitario NUMERIC(10,2) NOT NULL CHECK (prezzo_unitario >= 0),  -- prezzo IVA inclusa al momento dell'acquisto
+    iva             NUMERIC(4,2)  NOT NULL CHECK (iva >= 0),              -- % IVA contenuta, al momento dell'acquisto
     UNIQUE (id_ordine, id_prodotto)
 );
