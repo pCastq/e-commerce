@@ -1,9 +1,11 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%--
     FRAGMENT: menu di navigazione (incluso dall'header).
     La voce evidenziata dipende dal parametro "active".
-    I link verso pagine non ancora realizzate (catalogo, carrello, login, registrazione)
-    mostrano per ora la pagina 404: verranno attivati nei prossimi passi.
+    Le voci cambiano in base alla sessione: se esiste l'attributo "utente" sei loggato
+    (Account + Esci), altrimenti vedi Accedi + Registrati.
+    I link verso pagine non ancora realizzate (es. carrello) mostrano per ora la 404.
 --%>
 <nav id="site-nav" class="site-nav" aria-label="Menu principale">
     <form class="search-form" role="search" action="${pageContext.request.contextPath}/catalogo" method="get">
@@ -13,6 +15,16 @@
     <a href="${pageContext.request.contextPath}/" class="${param.active == 'home' ? 'active' : ''}">Home</a>
     <a href="${pageContext.request.contextPath}/catalogo" class="${param.active == 'catalogo' ? 'active' : ''}">Catalogo</a>
     <a href="${pageContext.request.contextPath}/carrello" class="${param.active == 'carrello' ? 'active' : ''}">Carrello</a>
-    <a href="${pageContext.request.contextPath}/login" class="${param.active == 'login' ? 'active' : ''}">Accedi</a>
-    <a href="${pageContext.request.contextPath}/registrazione" class="${param.active == 'registrazione' ? 'active' : ''}">Registrati</a>
+    <c:choose>
+        <c:when test="${not empty sessionScope.utente}">
+            <a href="${pageContext.request.contextPath}/profilo" class="${param.active == 'profilo' ? 'active' : ''}">Ciao, <c:out value="${sessionScope.utente.nome}"/></a>
+            <form class="logout-form" method="post" action="${pageContext.request.contextPath}/logout">
+                <button type="submit" class="link-button">Esci</button>
+            </form>
+        </c:when>
+        <c:otherwise>
+            <a href="${pageContext.request.contextPath}/login" class="${param.active == 'login' ? 'active' : ''}">Accedi</a>
+            <a href="${pageContext.request.contextPath}/registrazione" class="${param.active == 'registrazione' ? 'active' : ''}">Registrati</a>
+        </c:otherwise>
+    </c:choose>
 </nav>

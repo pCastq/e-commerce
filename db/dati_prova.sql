@@ -1,4 +1,4 @@
--- Dati di prova per il catalogo (da eseguire DOPO schema.sql).
+-- Dati di prova: utente amministratore + catalogo (da eseguire DOPO schema.sql).
 -- Le immagini sono in web/img/prodotti/ (qui si salva solo il nome del file).
 
 INSERT INTO prodotti (nome, descrizione, prezzo, iva, giacenza, immagine) VALUES
@@ -33,3 +33,9 @@ INSERT INTO prodotti (nome, descrizione, prezzo, iva, giacenza, immagine) VALUES
 ('Biscotti al Cioccolato 350 g',
  'Frollini croccanti con gocce di cioccolato fondente, perfetti per la colazione o la merenda.',
  2.29, 10.00, 70, 'biscotti.jpg');
+
+-- Utente amministratore di prova: admin@shop.it / password Admin2024!
+-- (la colonna password contiene l'hash SHA-256 di "Admin2024!", non la password)
+INSERT INTO utenti (nome, cognome, email, password, ruolo) VALUES
+('Admin', 'Negozio', 'admin@shop.it',
+ '5a55c7873ed7338f35d782adb513d336a36086ddec0fa4b6444fda6d440387c2', 'admin');

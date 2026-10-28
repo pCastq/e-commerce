@@ -257,7 +257,7 @@ th { background: var(--primary-soft); }
 /* ===== Catalogo e dettaglio prodotto (mobile-first) ===== */
 .grid-cards {                      /* quante colonne entrano, ciascuna min 220px */
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 16px;
 }
 .product-card {
@@ -285,3 +285,25 @@ th { background: var(--primary-soft); }
 @media (min-width: 700px) {
     .product-detail { grid-template-columns: 1fr 1fr; align-items: start; }
 }
+
+/* ===== Form di registrazione / login ===== */
+.form-page { max-width: 520px; margin: 0 auto; }
+.field-ok { margin: 4px 0 0; color: var(--success); font-size: .9rem; }
+.field-ok:empty { display: none; }
+.form-foot { margin: 12px 0 0; text-align: center; }
+
+/* ===== Pulsante "Esci" nel menu: è un <button> che deve sembrare un link ===== */
+.logout-form { margin: 0; }
+.site-nav .link-button {
+    background: none;
+    border: 0;
+    color: #fff;
+    font: inherit;
+    cursor: pointer;
+    padding: 8px 10px;
+    border-radius: 6px;
+    text-align: left;
+    width: 100%;
+}
+.site-nav .link-button:hover { background: rgba(255, 255, 255, .15); }
+@media (min-width: 700px) { .site-nav .link-button { width: auto; } }

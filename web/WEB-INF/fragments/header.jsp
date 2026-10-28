@@ -13,10 +13,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><c:out value="${param.pageTitle}" default="Benvenuto"/> - ShopTSW</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css?v=3">   <%-- ?v=N: cambia N quando modifichi il CSS, cosi il browser scarica la versione nuova --%>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css?v=6">   <%-- ?v=N: cambia N quando modifichi il CSS, cosi il browser scarica la versione nuova --%>
     <script src="${pageContext.request.contextPath}/js/layout.js" defer></script>
 </head>
-<body>
+<body data-context-path="${pageContext.request.contextPath}">
 <header class="site-header">
     <div class="container header-inner">
         <a class="brand" href="${pageContext.request.contextPath}/">Shop<span>TSW</span></a>
