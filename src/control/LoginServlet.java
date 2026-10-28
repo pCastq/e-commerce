@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpSession;
 import model.User;
 import model.dao.UserDAO;
 import util.PasswordUtil;
+import util.SessionKeys;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -20,9 +21,6 @@ import java.sql.SQLException;
  */
 @WebServlet("/login")
 public class LoginServlet extends HttpServlet {
-
-    /** Nome dell'attributo di sessione che contiene l'utente loggato. */
-    public static final String SESSION_USER = "utente";
 
     private static final String VIEW = "/WEB-INF/views/login.jsp";
     private final UserDAO userDAO = new UserDAO();
@@ -71,7 +69,7 @@ public class LoginServlet extends HttpServlet {
             old.invalidate();                      // si butta la vecchia sessione...
         }
         HttpSession session = req.getSession(true);   // ...e se ne crea una NUOVA (anti session fixation)
-        session.setAttribute(SESSION_USER, u);
+        session.setAttribute(SessionKeys.USER, u);
 
         String target = next != null ? next : "/";
         resp.sendRedirect(req.getContextPath() + target);
@@ -79,7 +77,7 @@ public class LoginServlet extends HttpServlet {
 
     private static boolean isLogged(HttpServletRequest req) {
         HttpSession s = req.getSession(false);
-        return s != null && s.getAttribute(SESSION_USER) != null;
+        return s != null && s.getAttribute(SessionKeys.USER) != null;
     }
 
     /**

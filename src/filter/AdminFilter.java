@@ -1,4 +1,4 @@
-package control;
+package filter;
 
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
@@ -10,6 +10,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import model.User;
+
+import util.SessionKeys;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -32,7 +34,7 @@ public class AdminFilter implements Filter {
         HttpServletResponse resp = (HttpServletResponse) response;
 
         HttpSession session = req.getSession(false);
-        User u = (session == null) ? null : (User) session.getAttribute(LoginServlet.SESSION_USER);
+        User u = (session == null) ? null : (User) session.getAttribute(SessionKeys.USER);
 
         if (u == null) {
             String path = req.getRequestURI().substring(req.getContextPath().length());

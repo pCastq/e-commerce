@@ -1,4 +1,4 @@
-package control;
+package filter;
 
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
@@ -9,6 +9,8 @@ import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+
+import util.SessionKeys;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -30,7 +32,7 @@ public class AuthFilter implements Filter {
         HttpServletResponse resp = (HttpServletResponse) response;
 
         HttpSession session = req.getSession(false);      // false: NON creare una sessione solo per controllare
-        boolean logged = session != null && session.getAttribute(LoginServlet.SESSION_USER) != null;
+        boolean logged = session != null && session.getAttribute(SessionKeys.USER) != null;
 
         if (logged) {
             chain.doFilter(request, response);            // ok, prosegui verso la servlet
