@@ -64,11 +64,8 @@ public class LoginServlet extends HttpServlet {
 
         // Login riuscito.
         u.setPassword(null);                       // l'hash non deve restare in sessione
-        HttpSession old = req.getSession(false);
-        if (old != null) {
-            old.invalidate();                      // si butta la vecchia sessione...
-        }
-        HttpSession session = req.getSession(true);   // ...e se ne crea una NUOVA (anti session fixation)
+        HttpSession session = req.getSession(true);   // la sessione che il visitatore ha già (o una nuova se manca)
+        req.changeSessionId();                        // stessi dati (es. il carrello!), NUOVO id: anti session fixation
         session.setAttribute(SessionKeys.USER, u);
 
         String target = next != null ? next : "/";

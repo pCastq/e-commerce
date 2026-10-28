@@ -13,7 +13,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><c:out value="${param.pageTitle}" default="Benvenuto"/> - ShopTSW</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css?v=6">   <%-- ?v=N: cambia N quando modifichi il CSS, cosi il browser scarica la versione nuova --%>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css?v=8">   <%-- ?v=N: cambia N quando modifichi il CSS, cosi il browser scarica la versione nuova --%>
     <script src="${pageContext.request.contextPath}/js/layout.js" defer></script>
 </head>
 <body data-context-path="${pageContext.request.contextPath}">
@@ -26,3 +26,12 @@
     </div>
 </header>
 <main class="container">
+<%-- Messaggi "una tantum" salvati in sessione dalle servlet prima di un redirect: si mostrano e si cancellano. --%>
+<c:if test="${not empty sessionScope.flashOk}">
+    <div class="alert alert-success" role="status"><c:out value="${sessionScope.flashOk}"/></div>
+    <c:remove var="flashOk" scope="session"/>
+</c:if>
+<c:if test="${not empty sessionScope.flashErr}">
+    <div class="alert alert-error" role="alert"><c:out value="${sessionScope.flashErr}"/></div>
+    <c:remove var="flashErr" scope="session"/>
+</c:if>

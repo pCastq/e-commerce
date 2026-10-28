@@ -2,11 +2,13 @@ package model.dao;
 
 import model.Product;
 
+import java.sql.Array;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /** DAO: unico posto che contiene le query SQL sui prodotti. */
@@ -66,6 +68,32 @@ public class ProductDAO {
                 return rs.next() ? map(rs) : null;
             }
         }
+    }
+
+    /**
+     * I prodotti attivi tra gli id indicati, in una sola query (serve al carrello).
+     * "id = ANY (?)" con un array PostgreSQL equivale a "id IN (1, 2, 3)" ma con un solo parametro.
+     */
+    public List<Product> findActiveByIds(Collection<Integer> ids) throws SQLException {
+        List<Product> result = new ArrayList<>();
+        if (ids.isEmpty()) {
+            return result;
+        }
+        String sql = "SELECT " + COLUMNS + " FROM prodotti WHERE id = ANY (?) AND attivo = ?";
+
+        try (Connection con = Database.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            Array array = con.createArrayOf("integer", ids.toArray(new Integer[0]));
+            ps.setArray(1, array);
+            ps.setBoolean(2, true);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    result.add(map(rs));
+                }
+            }
+            array.free();
+        }
+        return result;
     }
 
     /** Neutralizza % _ e \ che in LIKE hanno un significato speciale. */

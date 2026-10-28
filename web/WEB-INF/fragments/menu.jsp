@@ -5,7 +5,7 @@
     La voce evidenziata dipende dal parametro "active".
     Le voci cambiano in base alla sessione: se esiste l'attributo "utente" sei loggato
     (Account + Esci), altrimenti vedi Accedi + Registrati.
-    I link verso pagine non ancora realizzate (es. carrello) mostrano per ora la 404.
+    Accanto a "Carrello" compare il numero di pezzi presenti (se ce ne sono).
 --%>
 <nav id="site-nav" class="site-nav" aria-label="Menu principale">
     <form class="search-form" role="search" action="${pageContext.request.contextPath}/catalogo" method="get">
@@ -14,7 +14,7 @@
     </form>
     <a href="${pageContext.request.contextPath}/" class="${param.active == 'home' ? 'active' : ''}">Home</a>
     <a href="${pageContext.request.contextPath}/catalogo" class="${param.active == 'catalogo' ? 'active' : ''}">Catalogo</a>
-    <a href="${pageContext.request.contextPath}/carrello" class="${param.active == 'carrello' ? 'active' : ''}">Carrello</a>
+    <a href="${pageContext.request.contextPath}/carrello" class="${param.active == 'carrello' ? 'active' : ''}">Carrello<c:if test="${not empty sessionScope.carrello and sessionScope.carrello.totalItems > 0}"> <span class="cart-badge"><c:out value="${sessionScope.carrello.totalItems}"/></span></c:if></a>
     <c:choose>
         <c:when test="${not empty sessionScope.utente}">
             <a href="${pageContext.request.contextPath}/profilo" class="${param.active == 'profilo' ? 'active' : ''}">Ciao, <c:out value="${sessionScope.utente.nome}"/></a>

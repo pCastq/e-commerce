@@ -30,7 +30,23 @@
             </c:otherwise>
         </c:choose>
         <p><c:out value="${prodotto.descrizione}"/></p>
+
+        <c:if test="${prodotto.giacenza > 0}">
+            <form class="qty-form js-qty-form" method="post" action="${pageContext.request.contextPath}/carrello" novalidate>
+                <input type="hidden" name="azione" value="aggiungi">
+                <input type="hidden" name="id" value="${prodotto.id}">
+                <div class="form-group">
+                    <label for="quantita">Quantità (1-99)</label>
+                    <input type="number" id="quantita" name="quantita" class="qty-input" value="1" min="1" max="99"
+                           placeholder="1-99" inputmode="numeric">
+                    <p class="field-error">Inserisci un numero intero da 1 a 99.</p>
+                </div>
+                <button type="submit" class="btn">Aggiungi al carrello</button>
+            </form>
+        </c:if>
     </div>
 </section>
+
+<script src="${pageContext.request.contextPath}/js/carrello.js?v=2" defer></script>
 
 <jsp:include page="/WEB-INF/fragments/footer.jsp"/>

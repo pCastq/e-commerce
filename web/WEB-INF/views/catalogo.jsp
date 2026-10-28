@@ -48,7 +48,17 @@
                             <p class="stock stock-out">Non disponibile</p>
                         </c:otherwise>
                     </c:choose>
-                    <a class="btn btn-block" href="${pageContext.request.contextPath}/prodotto?id=${p.id}">Vedi dettagli</a>
+                    <div class="card-actions">
+                        <c:if test="${p.giacenza > 0}">
+                            <form method="post" action="${pageContext.request.contextPath}/carrello">
+                                <input type="hidden" name="azione" value="aggiungi">
+                                <input type="hidden" name="id" value="${p.id}">
+                                <input type="hidden" name="quantita" value="1">
+                                <button type="submit" class="btn btn-block">Aggiungi al carrello</button>
+                            </form>
+                        </c:if>
+                        <a class="btn btn-light btn-block" href="${pageContext.request.contextPath}/prodotto?id=${p.id}">Vedi dettagli</a>
+                    </div>
                 </article>
             </c:forEach>
         </div>
