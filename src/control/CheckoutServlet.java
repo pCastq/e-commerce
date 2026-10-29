@@ -63,7 +63,7 @@ public class CheckoutServlet extends HttpServlet {
 
         if (r.ok()) {
             session.setAttribute(SessionKeys.FLASH_OK, "Ordine effettuato. Grazie per l'acquisto!");
-            resp.sendRedirect(req.getContextPath() + "/ordini/confermato?id=" + r.idOrdine());
+            resp.sendRedirect(req.getContextPath() + "/ordini/dettaglio?id=" + r.idOrdine());
             return;
         }
 

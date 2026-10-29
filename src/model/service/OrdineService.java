@@ -1,6 +1,7 @@
 package model.service;
 
 import model.Cart;
+import model.Ordine;
 import model.Product;
 import model.User;
 import model.dao.Database;
@@ -9,6 +10,7 @@ import model.dao.ProductDAO;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -34,6 +36,16 @@ public class OrdineService {
     /** Esito: se ok() c'è l'id dell'ordine; altrimenti il problema e il messaggio da mostrare. */
     public record Risultato(Integer idOrdine, Problema problema, String messaggio) {
         public boolean ok() { return idOrdine != null; }
+    }
+
+    /** Gli ordini dell'utente, dal più recente. */
+    public List<Ordine> ordiniDi(User utente) throws SQLException {
+        return ordineDAO.findByUser(utente.getId());
+    }
+
+    /** Un ordine dell'utente (null se non esiste o è di un altro: non si distingue di proposito). */
+    public Ordine trovaDi(int idOrdine, User utente) throws SQLException {
+        return ordineDAO.findByIdAndUser(idOrdine, utente.getId());
     }
 
     public static boolean indirizzoValido(String indirizzo) {

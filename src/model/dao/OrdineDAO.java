@@ -9,6 +9,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.List;
 import java.math.BigDecimal;
 
@@ -45,6 +47,40 @@ public class OrdineDAO {
             ps.setBigDecimal(5, iva);
             ps.executeUpdate();
         }
+    }
+
+    /**
+     * Tutti gli ordini di un utente, dal più recente, ciascuno con le sue righe.
+     * Una sola query con JOIN; poi le righe si raggruppano per ordine in Java.
+     */
+    public List<Ordine> findByUser(int idUtente) throws SQLException {
+        String sql = "SELECT o.id, o.data_ordine, o.indirizzo_spedizione, "
+                   + "       op.id_prodotto, p.nome, op.quantita, op.prezzo_unitario, op.iva "
+                   + "FROM ordini o "
+                   + "JOIN ordini_prodotti op ON op.id_ordine = o.id "
+                   + "JOIN prodotti p ON p.id = op.id_prodotto "
+                   + "WHERE o.id_utente = ? "
+                   + "ORDER BY o.data_ordine DESC, o.id DESC, p.nome";
+
+        Map<Integer, Ordine> ordini = new LinkedHashMap<>();   // mantiene l'ordine di arrivo (più recente per primo)
+        try (Connection con = Database.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, idUtente);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    int id = rs.getInt("id");
+                    Ordine o = ordini.get(id);
+                    if (o == null) {
+                        o = new Ordine(id, rs.getTimestamp("data_ordine"),
+                                rs.getString("indirizzo_spedizione"), new ArrayList<>());
+                        ordini.put(id, o);
+                    }
+                    o.getRighe().add(new OrdineRiga(rs.getInt("id_prodotto"), rs.getString("nome"),
+                            rs.getInt("quantita"), rs.getBigDecimal("prezzo_unitario"), rs.getBigDecimal("iva")));
+                }
+            }
+        }
+        return new ArrayList<>(ordini.values());
     }
 
     /**

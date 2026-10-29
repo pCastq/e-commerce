@@ -17,6 +17,7 @@
     <a href="${pageContext.request.contextPath}/carrello" class="${param.active == 'carrello' ? 'active' : ''}">Carrello<c:if test="${not empty sessionScope.carrello and sessionScope.carrello.totalItems > 0}"> <span class="cart-badge"><c:out value="${sessionScope.carrello.totalItems}"/></span></c:if></a>
     <c:choose>
         <c:when test="${not empty sessionScope.utente}">
+            <a href="${pageContext.request.contextPath}/ordini" class="${param.active == 'ordini' ? 'active' : ''}">I miei ordini</a>
             <a href="${pageContext.request.contextPath}/profilo" class="${param.active == 'profilo' ? 'active' : ''}">Ciao, <c:out value="${sessionScope.utente.nome}"/></a>
             <form class="logout-form" method="post" action="${pageContext.request.contextPath}/logout">
                 <button type="submit" class="link-button">Esci</button>

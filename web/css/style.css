@@ -376,3 +376,31 @@ th { background: var(--primary-soft); }
 .qty-msg:empty { display: none; }
 .qty-msg.is-error { color: var(--danger); }
 .cart-line.is-busy { opacity: .6; transition: opacity .15s; }
+
+/* ===== Ordini e fattura ===== */
+.row-links a { margin-right: 12px; white-space: nowrap; }
+.num { text-align: right; }
+.hide-mobile { display: none; }
+.invoice-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; margin-bottom: 12px; }
+.invoice-head { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; margin-bottom: 16px; }
+.invoice-head h1 { margin-bottom: .2em; }
+.invoice-parties { display: grid; gap: 8px 24px; margin-bottom: 16px; }
+.invoice-parties h2 { font-size: 1rem; color: var(--muted); margin-bottom: .2em; }
+.invoice-total { text-align: right; margin: 12px 0; }
+@media (min-width: 700px) {
+    .hide-mobile { display: table-cell; }
+    .invoice-parties { grid-template-columns: 1fr 1fr; }
+    .invoice-seller { text-align: right; }
+}
+
+/* ===== Stampa: si stampa solo il contenuto (es. la fattura), senza header, menu, footer e pulsanti ===== */
+@media print {
+    .site-header, .site-footer, .no-print, .alert { display: none !important; }
+    body { background: #fff; color: #000; min-height: 0; display: block; }
+    .container { max-width: none; padding: 0; margin: 0; }
+    .card { box-shadow: none; border: 0; padding: 0; }
+    th { background: #eee !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    a { color: inherit; text-decoration: none; }
+    .table-wrap { overflow: visible; }
+    table, tr, .invoice-total { page-break-inside: avoid; }
+}

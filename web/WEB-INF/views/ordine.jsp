@@ -2,20 +2,20 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <fmt:setLocale value="it_IT"/>
-<%-- VIEW di conferma (da OrdineConfermatoServlet). Attributo: ordine (model.Ordine). --%>
+<%-- VIEW del dettaglio di un ordine (da OrdineServlet). Attributo: ordine (model.Ordine). --%>
 <jsp:include page="/WEB-INF/fragments/header.jsp">
-    <jsp:param name="pageTitle" value="Ordine confermato"/>
-    <jsp:param name="active" value=""/>
+    <jsp:param name="pageTitle" value="Ordine"/>
+    <jsp:param name="active" value="ordini"/>
 </jsp:include>
 
-<h1>Grazie! Ordine n. ${ordine.id} confermato</h1>
+<h1>Ordine n. ${ordine.id}</h1>
 
 <div class="card">
     <p><strong>Data:</strong> <fmt:formatDate value="${ordine.dataOrdine}" pattern="dd/MM/yyyy HH:mm"/></p>
     <p><strong>Spedizione a:</strong> <c:out value="${ordine.indirizzoSpedizione}"/></p>
 
     <div class="table-wrap">
-        <table class="table">
+        <table>
             <thead><tr><th>Prodotto</th><th>Quantità</th><th>Prezzo</th><th>IVA</th><th>Totale</th></tr></thead>
             <tbody>
             <c:forEach var="riga" items="${ordine.righe}">
@@ -36,6 +36,9 @@
     <p class="cart-total-value">Totale: <fmt:formatNumber value="${ordine.totale}" pattern="#,##0.00"/> &euro;</p>
 </div>
 
-<a class="btn" href="${pageContext.request.contextPath}/catalogo">Torna al catalogo</a>
+<div class="cart-buttons">
+    <a class="btn btn-light" href="${pageContext.request.contextPath}/ordini">Tutti i miei ordini</a>
+    <a class="btn" href="${pageContext.request.contextPath}/fattura?id=${ordine.id}">Vedi la fattura</a>
+</div>
 
 <jsp:include page="/WEB-INF/fragments/footer.jsp"/>
