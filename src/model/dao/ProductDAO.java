@@ -1,6 +1,7 @@
 package model.dao;
 
 import model.Product;
+import util.SqlUtil;
 
 import java.sql.Array;
 import java.sql.Connection;
@@ -46,7 +47,7 @@ public class ProductDAO {
         try (Connection con = Database.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setBoolean(1, true);
-            ps.setString(2, "%" + escapeLike(text) + "%");
+            ps.setString(2, "%" + SqlUtil.escapeLike(text) + "%");
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     result.add(map(rs));
@@ -66,7 +67,7 @@ public class ProductDAO {
                    + "WHERE attivo = ? AND nome ILIKE ? ESCAPE '\\' "
                    + "ORDER BY (nome ILIKE ? ESCAPE '\\') DESC, nome LIMIT ?";
         List<Product> result = new ArrayList<>();
-        String escaped = escapeLike(text);
+        String escaped = SqlUtil.escapeLike(text);
 
         try (Connection con = Database.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -222,11 +223,6 @@ public class ProductDAO {
             ps.setInt(2, id);
             return ps.executeUpdate();
         }
-    }
-
-    /** Neutralizza % _ e \ che in LIKE hanno un significato speciale. */
-    private static String escapeLike(String text) {
-        return text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
     }
 
     private Product map(ResultSet rs) throws SQLException {

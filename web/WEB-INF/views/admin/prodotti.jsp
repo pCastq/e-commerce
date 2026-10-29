@@ -8,6 +8,8 @@
     <jsp:param name="active" value="admin"/>
 </jsp:include>
 
+<jsp:include page="/WEB-INF/fragments/admin-nav.jsp"><jsp:param name="section" value="prodotti"/></jsp:include>
+
 <div class="admin-head">
     <h1>Gestione prodotti</h1>
     <a class="btn" href="${pageContext.request.contextPath}/admin/prodotti/form">+ Nuovo prodotto</a>

@@ -117,7 +117,10 @@ main.container { flex: 1; padding-top: 24px; padding-bottom: 32px; }
     border-radius: 6px;
 }
 .site-nav a:hover { background: rgba(255, 255, 255, .15); }
-.site-nav a.active { background: var(--primary); }
+.site-nav a.active {                       /* pagina in cui sei: sfondo chiaro trasparente + sottolineatura bianca */
+    background: rgba(255, 255, 255, .18);
+    box-shadow: inset 0 -3px 0 #fff;
+}
 
 .search-form { display: flex; gap: 6px; width: 100%; margin-top: 4px; position: relative; }   /* relative: l'elenco dei suggerimenti si posiziona rispetto al form */
 .search-form input {
@@ -128,15 +131,17 @@ main.container { flex: 1; padding-top: 24px; padding-bottom: 32px; }
     border-radius: 6px;
     font: inherit;
 }
-.search-form button {
+.search-form button {                       /* arancione: è un'azione, non una pagina; si distingue dalla voce attiva del menu */
     padding: 8px 14px;
     border: 0;
     border-radius: 6px;
-    background: var(--primary);
-    color: #fff;
+    background: #f59e0b;
+    color: #1e3a8a;
     font: inherit;
+    font-weight: bold;
     cursor: pointer;
 }
+.search-form button:hover { background: #fbbf24; }
 
 /* 5. Componenti */
 .card {
@@ -272,7 +277,7 @@ th { background: var(--primary-soft); }
 .product-link { color: inherit; text-decoration: none; }
 .product-image { aspect-ratio: 1 / 1; background: var(--surface); border-radius: 6px; overflow: hidden; }
 .product-image img { width: 100%; height: 100%; object-fit: contain; display: block; }   /* contain: si vede tutta la foto (cover la ritagliava) */
-.product-name { font-size: .95rem; margin: 6px 0 0; }
+.product-name { font-size: .95rem; margin: 6px 0; }
 .product-price { font-weight: bold; font-size: 1.15rem; margin: 0; }
 .product-price small { font-weight: normal; font-size: .8rem; color: var(--muted); }
 .stock { margin: 0; font-size: .9rem; }
@@ -312,14 +317,22 @@ th { background: var(--primary-soft); }
 @media (min-width: 700px) { .site-nav .link-button { width: auto; } }
 
 /* ===== Carrello ===== */
-.card-actions { display: flex; flex-direction: column; gap: 6px; margin-top: auto; }
-.card-actions .btn-block { margin-top: 0; }
-.card-actions form { margin: 0; }
+/* Parte bassa della scheda (prezzo, disponibilità, quantità, pulsanti): sempre ancorata al fondo,
+   così prezzo e "Disponibile" stanno sulla stessa riga in tutte le schede, qualunque sia la lunghezza del nome. */
+.product-buy { display: flex; flex-direction: column; gap: 6px; margin-top: auto; }
+.product-buy form { margin: 0; }
+.product-buy .form-group { margin: 0 0 6px; }
+.product-buy .btn-block { margin-top: 0; }
+.product-buy .qty-stepper { display: flex; margin-bottom: 6px; }      /* occupa tutta la larghezza, come i pulsanti sotto */
+.product-buy .qty-stepper .qty-input { flex: 1; width: 0; min-width: 0; }
+.product-buy .qty-btn { width: 36px; padding: 0; }
 
 .cart-badge {
     display: inline-block;
-    min-width: 1.4em;
-    padding: 0 6px;
+    box-sizing: border-box;
+    width: 2.7em;                 /* larghezza FISSA per 3 cifre: il menu non si sposta quando il numero cambia */
+    text-align: center;
+    padding: 0 4px;
     border-radius: 999px;
     background: #fff;
     color: var(--primary-dark);
@@ -355,8 +368,12 @@ th { background: var(--primary-soft); }
 .cart-buttons form { margin: 0; }
 
 @media (min-width: 700px) {
-    .cart-line { grid-template-columns: 72px 1fr auto auto; }
+    .cart-line { grid-template-columns: 72px 1fr 150px 120px; }   /* colonna quantità a larghezza fissa: i bottoni restano incolonnati */
     .cart-qty, .cart-sub { grid-column: auto; }
+    /* il messaggio sotto i bottoni non allarga la colonna: si estende verso sinistra, allineato a destra */
+    .cart-qty { position: relative; }
+    .cart-qty .qty-msg { position: absolute; right: 0; top: 100%; width: max-content; max-width: 26rem; text-align: right; margin: 4px 0 0; }
+    .cart-line:has(.qty-msg:not(:empty)) { padding-bottom: 2.2rem; }
     .cart-sub { flex-direction: column; align-items: flex-end; gap: 6px; }
 }
 
@@ -442,3 +459,31 @@ th { background: var(--primary-soft); }
 .dialog { border: 0; border-radius: var(--radius); box-shadow: 0 10px 30px rgba(15, 23, 42, .35); max-width: min(440px, 92vw); padding: 20px; }
 .dialog::backdrop { background: rgba(15, 23, 42, .5); }
 .dialog-buttons { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+
+.admin-tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 2px solid var(--border); }
+.admin-tabs a { padding: 8px 16px; text-decoration: none; font-weight: 600; border-radius: 8px 8px 0 0; }
+.admin-tabs a.active { background: var(--primary); color: #fff; }
+.filter-form { display: grid; gap: 0 16px; margin-bottom: 16px; }
+.table-summary { margin: 12px 0 0; text-align: right; }
+.filter-form .form-group { margin-bottom: 12px; }
+.filter-buttons { display: flex; gap: 8px; align-items: center; }
+@media (min-width: 700px) {
+    .filter-form { grid-template-columns: 1fr 1fr 2fr auto; align-items: end; }
+    .filter-form .filter-buttons { margin-bottom: 12px; }
+    /* l'errore sta "sotto" il campo senza allungarlo: così i campi restano tutti sulla stessa riga */
+    .filter-form .form-group { position: relative; }
+    .filter-form .field-error { position: absolute; top: 100%; left: 0; right: 0; margin: 4px 0 0; line-height: 1.3; }
+    .filter-form:has(.has-error) { padding-bottom: 2.4rem; }   /* spazio per le righe d'errore */
+}
+
+/* Carrello vuoto: il numero non si vede ma il suo spazio resta riservato */
+.cart-badge.is-empty { visibility: hidden; }
+
+/* Messaggio temporaneo (catalogo: aggiunta al carrello senza cambiare pagina) */
+.toast {
+    position: fixed; left: 50%; bottom: 1.25rem; transform: translateX(-50%);
+    max-width: calc(100% - 2rem); padding: .75rem 1.1rem; border-radius: 8px;
+    background: #1e6b3a; color: #fff; box-shadow: 0 4px 14px rgba(0,0,0,.25); z-index: 50;
+}
+.toast[hidden] { display: none; }
+.toast-error { background: #a33; }

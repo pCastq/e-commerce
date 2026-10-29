@@ -85,7 +85,6 @@
         <div class="cart-total-value">Totale: <fmt:formatNumber value="${ordine.totale}" pattern="#,##0.00"/> &euro;</div>
     </div>
 
-    <p class="muted"><small>Documento dimostrativo creato per un progetto didattico: non ha valore fiscale.</small></p>
 </article>
 
 <script src="${pageContext.request.contextPath}/js/fattura.js" defer></script>

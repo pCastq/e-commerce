@@ -21,7 +21,7 @@
     <c:when test="${empty righe}">
         <div class="card">
             <p>Il carrello è vuoto.</p>
-            <a class="btn" href="${pageContext.request.contextPath}/catalogo">Vai al catalogo</a>
+            <a class="btn" href="${pageContext.request.contextPath}/">Vai al catalogo</a>
         </div>
     </c:when>
     <c:otherwise>
@@ -73,7 +73,7 @@
         </div>
 
         <div class="cart-buttons">
-            <a class="btn btn-light" href="${pageContext.request.contextPath}/catalogo">Continua gli acquisti</a>
+            <a class="btn btn-light" href="${pageContext.request.contextPath}/">Continua gli acquisti</a>
             <form method="post" action="${pageContext.request.contextPath}/carrello">
                 <input type="hidden" name="azione" value="svuota">
                 <button type="submit" class="btn btn-light">Svuota il carrello</button>
@@ -83,6 +83,7 @@
     </c:otherwise>
 </c:choose>
 
-<script src="${pageContext.request.contextPath}/js/carrello.js?v=2" defer></script>
+<script src="${pageContext.request.contextPath}/js/quantita.js?v=1" defer></script>
+<script src="${pageContext.request.contextPath}/js/carrello.js?v=4" defer></script>
 
 <jsp:include page="/WEB-INF/fragments/footer.jsp"/>

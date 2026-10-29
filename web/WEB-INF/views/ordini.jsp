@@ -14,7 +14,7 @@
     <c:when test="${empty ordini}">
         <div class="card">
             <p>Non hai ancora effettuato ordini.</p>
-            <a class="btn" href="${pageContext.request.contextPath}/catalogo">Vai al catalogo</a>
+            <a class="btn" href="${pageContext.request.contextPath}/">Vai al catalogo</a>
         </div>
     </c:when>
     <c:otherwise>

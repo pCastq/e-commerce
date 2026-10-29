@@ -8,7 +8,7 @@
     <jsp:param name="active" value="catalogo"/>
 </jsp:include>
 
-<p><a href="${pageContext.request.contextPath}/catalogo">&larr; Torna al catalogo</a></p>
+<p><a href="${pageContext.request.contextPath}/">&larr; Torna al catalogo</a></p>
 
 <section class="product-detail">
     <div class="product-image product-image-big">
@@ -47,6 +47,7 @@
     </div>
 </section>
 
-<script src="${pageContext.request.contextPath}/js/carrello.js?v=2" defer></script>
+<script src="${pageContext.request.contextPath}/js/quantita.js?v=1" defer></script>
+<script src="${pageContext.request.contextPath}/js/carrello.js?v=4" defer></script>
 
 <jsp:include page="/WEB-INF/fragments/footer.jsp"/>

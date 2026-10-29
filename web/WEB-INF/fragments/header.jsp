@@ -5,7 +5,7 @@
     Apre <html>, <head>, <body>, <header> e <main>; il footer li richiude.
     Parametri (passati con <jsp:param>):
       pageTitle -> titolo della scheda del browser
-      active    -> voce di menu da evidenziare (home, catalogo, carrello, login, registrazione)
+      active    -> voce di menu da evidenziare (catalogo, carrello, login, registrazione)
 --%>
 <!DOCTYPE html>
 <html lang="it">
@@ -13,7 +13,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><c:out value="${param.pageTitle}" default="Benvenuto"/> - ShopTSW</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css?v=15">   <%-- ?v=N: cambia N quando modifichi il CSS, cosi il browser scarica la versione nuova --%>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css?v=25">   <%-- ?v=N: cambia N quando modifichi il CSS, cosi il browser scarica la versione nuova --%>
     <script src="${pageContext.request.contextPath}/js/layout.js" defer></script>
     <script src="${pageContext.request.contextPath}/js/ricerca.js?v=1" defer></script>
 </head>

@@ -28,7 +28,7 @@ import java.sql.SQLException;
  *
  * Due modi di rispondere a un POST:
  *  - normale (form HTML): redirect a /carrello (Post/Redirect/Get);
- *  - AJAX (solo per "aggiorna", quando il browser chiede application/json): niente redirect,
+ *  - AJAX (per "aggiorna" e per "aggiungi" dal catalogo, quando il browser chiede application/json): niente redirect,
  *    risposta JSON con quantità reale, subtotale e totali.
  */
 @WebServlet("/carrello")
@@ -63,6 +63,16 @@ public class CarrelloServlet extends HttpServlet {
         try {
             if (azione.equals("aggiorna") && wantsJson(req)) {
                 rispondiJson(resp, cartService.aggiornaERiepiloga(cart, id, quantita), id);
+                return;
+            }
+            if (azione.equals("aggiungi") && wantsJson(req)) {
+                // AJAX dal catalogo: si resta sulla pagina, il browser aggiorna badge e messaggio
+                Esito e = cartService.aggiungi(cart, id, quantita);
+                JsonResponse.send(resp, Json.object(
+                        "ok", e.stato() != Stato.ERRORE,
+                        "stato", e.stato().name(),
+                        "messaggio", e.messaggio(),
+                        "totaleArticoli", cart.getTotalItems()));
                 return;
             }
             switch (azione) {

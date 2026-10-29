@@ -1,10 +1,8 @@
-/* Comportamento delle pagine con quantità (dettaglio prodotto e carrello).
+/* Comportamento delle pagine con quantità (dettaglio prodotto e carrello). Dipende da quantita.js (caricato prima).
    Il server rifà sempre i controlli: qui si dà solo un riscontro immediato, senza alert(). */
 (function () {
     "use strict";
 
-    var RE_QUANTITA = /^[1-9][0-9]?$/;          // intero da 1 a 99
-    var MIN = 1, MAX = 99;
     var ATTESA_DIGITAZIONE = 600;               // ms di pausa dopo l'ultimo tasto prima di inviare
     var ATTESA_PULSANTI = 300;                  // ms dopo l'ultimo clic su - / +
     var euro = new Intl.NumberFormat("it-IT", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -18,7 +16,7 @@
         var input = form.querySelector("input[name='quantita']");
         var gruppo = input.closest(".form-group");
 
-        function valido() { return RE_QUANTITA.test(input.value.trim()); }
+        function valido() { return Quantita.RE.test(input.value.trim()); }
 
         input.addEventListener("input", function () {
             if (valido()) { gruppo.classList.remove("has-error"); }
@@ -38,27 +36,30 @@
     document.querySelectorAll(".js-cart-qty").forEach(function (form) {
         var riga = form.closest(".cart-line");
         var id = form.querySelector("input[name='id']").value;
-        var input = form.querySelector("input[name='quantita']");
-        var gruppo = input.closest(".form-group");
         var msg = form.querySelector(".qty-msg");
-        var btnMeno = form.querySelector("[data-delta='-1']");
-        var btnPiu = form.querySelector("[data-delta='1']");
         var url = form.getAttribute("action");
 
-        var ultimaValida = parseInt(input.value, 10);   // quantità confermata dal server
+        var ultimaValida = parseInt(form.querySelector("input[name='quantita']").value, 10);   // quantità confermata dal server
         var timer = null;                               // timer della pausa
         var inCorso = false;                            // c'è una richiesta in viaggio per questa riga?
         var inAttesa = null;                            // ultimo valore voluto mentre la richiesta era in viaggio
 
-        function valoreDigitato() {
-            return RE_QUANTITA.test(input.value) ? parseInt(input.value, 10) : null;
-        }
-
-        function aggiornaPulsanti() {
-            var v = valoreDigitato();
-            btnMeno.disabled = (v === null) ? false : v <= MIN;
-            btnPiu.disabled = (v === null) ? false : v >= MAX;
-        }
+        /* Il selettore - [ n ] + è codice condiviso (quantita.js); qui si decide solo cosa fare quando cambia. */
+        var sel = Quantita.selettore(form, {
+            alDigitare: function (v) {
+                mostraMessaggio("");
+                clearTimeout(timer);
+                timer = null;
+                if (v !== null) { programma(v, ATTESA_DIGITAZIONE); }   // vuoto/non valido: nessuna richiesta
+            },
+            alPulsante: function (v) {
+                mostraMessaggio("");
+                programma(v, ATTESA_PULSANTI);          // più clic ravvicinati = una sola richiesta
+            },
+            alBlur: subito,
+            ripristino: function () { return ultimaValida; }
+        });
+        var input = sel.input;
 
         function mostraMessaggio(testo, errore) {
             msg.textContent = testo || "";
@@ -100,7 +101,7 @@
             if (!ok) {
                 mostraMessaggio(dati.messaggio, true);
                 if (document.activeElement !== input) { input.value = ultimaValida; }
-                aggiornaPulsanti();
+                sel.aggiornaPulsanti();
                 return;
             }
 
@@ -119,13 +120,12 @@
             riga.querySelector(".cart-subtotal").textContent = formatta(dati.subtotale);
             aggiornaTotali(dati);
             mostraMessaggio(dati.messaggio, true);
-            aggiornaPulsanti();
+            sel.aggiornaPulsanti();
         }
 
         function aggiornaTotali(dati) {
             document.getElementById("cart-total").textContent = formatta(dati.totale);
-            var badge = document.querySelector(".cart-badge");
-            if (badge) { badge.textContent = dati.totaleArticoli; }
+            Quantita.aggiornaBadge(dati.totaleArticoli);
         }
 
         function programma(q, attesa) {
@@ -137,65 +137,21 @@
             if (timer !== null) {
                 clearTimeout(timer);
                 timer = null;
-                var v = valoreDigitato();
+                var v = sel.valore();
                 if (v !== null) { invia(v); }
             }
         }
 
-        /* ---- eventi ---- */
-        input.addEventListener("input", function () {
-            input.value = input.value.replace(/\D/g, "").slice(0, 2);   // solo cifre
-            mostraMessaggio("");
-            var v = valoreDigitato();
-            aggiornaPulsanti();
-            clearTimeout(timer);
-            timer = null;
-            if (v === null) {
-                // vuoto o 0: stato "in modifica", NESSUNA richiesta. Si avvisa solo se c'è qualcosa di scritto.
-                gruppo.classList.toggle("has-error", input.value !== "");
-                return;
-            }
-            gruppo.classList.remove("has-error");
-            programma(v, ATTESA_DIGITAZIONE);
-        });
-
-        input.addEventListener("blur", function () {
-            if (valoreDigitato() === null) {                // lasciato vuoto/non valido: si ripristina
-                clearTimeout(timer);
-                timer = null;
-                input.value = ultimaValida;
-                gruppo.classList.remove("has-error");
-                aggiornaPulsanti();
-            } else {
-                subito();
-            }
-        });
-
         form.addEventListener("submit", function (e) {      // Invio nel campo: niente ricarica
             e.preventDefault();
-            var v = valoreDigitato();
+            var v = sel.valore();
             if (v === null) {
-                gruppo.classList.add("has-error");
+                sel.errore(true);
             } else {
                 clearTimeout(timer);
                 timer = null;
                 invia(v);
             }
         });
-
-        [btnMeno, btnPiu].forEach(function (btn) {
-            btn.addEventListener("click", function () {
-                var corrente = valoreDigitato();
-                if (corrente === null) { corrente = ultimaValida; }
-                var nuovo = Math.min(MAX, Math.max(MIN, corrente + parseInt(btn.dataset.delta, 10)));
-                input.value = nuovo;
-                gruppo.classList.remove("has-error");
-                mostraMessaggio("");
-                aggiornaPulsanti();
-                programma(nuovo, ATTESA_PULSANTI);          // più clic ravvicinati = una sola richiesta
-            });
-        });
-
-        aggiornaPulsanti();
     });
 })();

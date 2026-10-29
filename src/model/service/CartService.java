@@ -59,8 +59,7 @@ public class CartService {
         int nuova = Math.min(cart.getQuantita(id) + quantita, Cart.MAX_QUANTITA);
         if (nuova > p.getGiacenza()) {
             cart.set(id, p.getGiacenza());
-            return new Esito(Stato.AVVISO, soloDisponibili(p.getGiacenza()) + " di «"
-                    + p.getNome() + "»: quantità adeguata.");
+            return quantitaAdeguata(p.getGiacenza());
         }
         cart.set(id, nuova);
         return new Esito(Stato.OK, "«" + p.getNome() + "» aggiunto al carrello.");
@@ -78,8 +77,7 @@ public class CartService {
         }
         if (quantita > p.getGiacenza()) {
             cart.set(id, p.getGiacenza());
-            return new Esito(Stato.AVVISO, soloDisponibili(p.getGiacenza()) + " di «"
-                    + p.getNome() + "»: quantità adeguata.");
+            return quantitaAdeguata(p.getGiacenza());
         }
         cart.set(id, quantita);
         return new Esito(Stato.OK, "Quantità aggiornata.");
@@ -153,6 +151,11 @@ public class CartService {
             }
         }
         return new Riepilogo(righe, totale, avviso);
+    }
+
+    /** Avviso uguale in catalogo e carrello quando si chiede più di quanto c'è in magazzino. */
+    private static Esito quantitaAdeguata(int giacenza) {
+        return new Esito(Stato.AVVISO, soloDisponibili(giacenza) + ".");
     }
 
     /** "Disponibile solo 1 pezzo" / "Disponibili solo 5 pezzi": singolare e plurale corretti. */

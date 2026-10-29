@@ -14,13 +14,29 @@ public class Ordine {
     private final Timestamp dataOrdine;
     private final String indirizzoSpedizione;
     private final List<OrdineRiga> righe;
+    // Chi ha fatto l'ordine: valorizzati solo quando l'ordine è letto dall'area admin (altrimenti null)
+    private final String clienteNome;
+    private final String clienteCognome;
+    private final String clienteEmail;
 
     public Ordine(int id, Timestamp dataOrdine, String indirizzoSpedizione, List<OrdineRiga> righe) {
+        this(id, dataOrdine, indirizzoSpedizione, righe, null, null, null);
+    }
+
+    public Ordine(int id, Timestamp dataOrdine, String indirizzoSpedizione, List<OrdineRiga> righe,
+                  String clienteNome, String clienteCognome, String clienteEmail) {
         this.id = id;
         this.dataOrdine = dataOrdine;
         this.indirizzoSpedizione = indirizzoSpedizione;
         this.righe = righe;
+        this.clienteNome = clienteNome;
+        this.clienteCognome = clienteCognome;
+        this.clienteEmail = clienteEmail;
     }
+
+    public String getClienteNome() { return clienteNome; }
+    public String getClienteCognome() { return clienteCognome; }
+    public String getClienteEmail() { return clienteEmail; }
 
     public int getId() { return id; }
     public Timestamp getDataOrdine() { return dataOrdine; }

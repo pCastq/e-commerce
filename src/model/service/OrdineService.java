@@ -9,7 +9,11 @@ import model.dao.OrdineDAO;
 import model.dao.ProductDAO;
 
 import java.sql.Connection;
+import java.math.BigDecimal;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -46,6 +50,68 @@ public class OrdineService {
     /** Un ordine dell'utente (null se non esiste o è di un altro: non si distingue di proposito). */
     public Ordine trovaDi(int idOrdine, User utente) throws SQLException {
         return ordineDAO.findByIdAndUser(idOrdine, utente.getId());
+    }
+
+    // ------------------------------------------------------------------ area amministratore
+
+    /** Massimo di ordini mostrati in una ricerca (oltre, si invita a restringere i filtri). */
+    public static final int LIMITE_RICERCA = 200;
+
+    /**
+     * Risultato di una ricerca ordini: gli ordini trovati, gli errori sui filtri (per campo; se non vuota non si è cercato),
+     * se l'elenco è stato troncato al limite e il totale incassato degli ordini mostrati (IVA inclusa).
+     */
+    public record Ricerca(List<Ordine> ordini, Map<String, String> errori, boolean troncato, BigDecimal totale) {
+        public boolean ok() { return errori.isEmpty(); }
+    }
+
+    /**
+     * Cerca gli ordini di tutti i clienti. I parametri sono i testi dei filtri così come arrivano dal form
+     * (null o vuoti = filtro non usato): date nel formato aaaa-mm-gg (quello di &lt;input type="date"&gt;).
+     */
+    public Ricerca cerca(String dal, String al, String cliente) throws SQLException {
+        Map<String, String> errori = new LinkedHashMap<>();
+        LocalDate dataDal = leggiData(dal, "dal", errori);
+        LocalDate dataAl = leggiData(al, "al", errori);
+        if (dataDal != null && dataAl != null && dataDal.isAfter(dataAl)) {
+            errori.put("al", "La data finale non può essere precedente a quella iniziale.");
+        }
+        String testo = cliente == null ? "" : cliente.trim();
+        if (testo.length() > 100) {
+            errori.put("cliente", "Testo troppo lungo (massimo 100 caratteri).");
+        }
+        if (!errori.isEmpty()) {
+            return new Ricerca(List.of(), errori, false, BigDecimal.ZERO);
+        }
+
+        // si chiede un ordine in più del limite per sapere se ce ne sono altri (senza contarli tutti)
+        List<Ordine> trovati = ordineDAO.search(dataDal, dataAl, testo, LIMITE_RICERCA + 1);
+        boolean troncato = trovati.size() > LIMITE_RICERCA;
+        if (troncato) {
+            trovati = trovati.subList(0, LIMITE_RICERCA);
+        }
+        BigDecimal totale = BigDecimal.ZERO;
+        for (Ordine o : trovati) {
+            totale = totale.add(o.getTotale());
+        }
+        return new Ricerca(trovati, errori, troncato, totale);
+    }
+
+    /** Un ordine qualunque, con i dati del cliente (solo per l'admin); null se non esiste. */
+    public Ordine trovaPerAdmin(int idOrdine) throws SQLException {
+        return ordineDAO.findByIdAdmin(idOrdine);
+    }
+
+    private static LocalDate leggiData(String testo, String campo, Map<String, String> errori) {
+        if (testo == null || testo.isBlank()) {
+            return null;
+        }
+        try {
+            return LocalDate.parse(testo.trim());          // formato ISO: 2026-10-29
+        } catch (DateTimeParseException e) {
+            errori.put(campo, "Data non valida.");
+            return null;
+        }
     }
 
     public static boolean indirizzoValido(String indirizzo) {
