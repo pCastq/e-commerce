@@ -19,8 +19,6 @@
         </cookie-config>
     </session-config>
 
-    <!-- Pagina mostrata quando si apre http://localhost:8080/ -->
-
     <!-- Pagine di errore 403/404/500 -->
     <error-page>
         <error-code>403</error-code>
