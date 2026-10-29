@@ -8,21 +8,20 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import model.Cart;
 import model.CartLine;
-import model.Product;
-import model.dao.ProductDAO;
+import model.service.CartService;
+import model.service.CartService.Esito;
+import model.service.CartService.Riepilogo;
+import model.service.CartService.Stato;
 import util.Json;
 import util.SessionKeys;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * CONTROLLER del carrello (pubblico: non serve il login, il carrello sta nella sessione).
+ * Le regole (quantità, giacenza, disponibilità) stanno in CartService: qui si legge la richiesta,
+ * si chiama il service e si sceglie la risposta.
  *
  *  GET  /carrello  -> mostra il carrello
  *  POST /carrello  -> modifica il carrello. Il parametro "azione" dice cosa fare:
@@ -36,13 +35,7 @@ import java.util.Map;
 @WebServlet("/carrello")
 public class CarrelloServlet extends HttpServlet {
 
-    private final ProductDAO productDAO = new ProductDAO();
-
-    /** Righe da mostrare, totale e un eventuale avviso (es. prodotto non più disponibile). */
-    private record Riepilogo(List<CartLine> righe, BigDecimal totale, String avviso) { }
-
-    /** Esito di un'operazione sul carrello: messaggio per l'utente e se è un errore/avviso. */
-    private record Esito(String messaggio, boolean errore) { }
+    private final CartService cartService = new CartService();
 
     // ------------------------------------------------------------------ GET: mostra
     @Override
@@ -54,9 +47,9 @@ public class CarrelloServlet extends HttpServlet {
 
         Riepilogo r;
         try {
-            r = riepilogo(cart);
-        } catch (SQLException ex) {
-            throw new ServletException("Errore di accesso al database", ex);
+            r = cartService.riepilogo(cart);
+        } catch (SQLException e) {
+            throw new ServletException("Errore di accesso al database", e);
         }
 
         req.setAttribute("righe", r.righe());
@@ -74,6 +67,8 @@ public class CarrelloServlet extends HttpServlet {
         if (azione == null) {
             azione = "";
         }
+        Integer id = parseIntOrNull(req.getParameter("id"));            // null = non numerico
+        Integer quantita = parseIntOrNull(req.getParameter("quantita"));
 
         HttpSession session = req.getSession(true);        // true: qui il carrello va creato se manca
         Cart cart = (Cart) session.getAttribute(SessionKeys.CART);
@@ -84,15 +79,14 @@ public class CarrelloServlet extends HttpServlet {
 
         try {
             if (azione.equals("aggiorna") && wantsJson(req)) {
-                aggiornaAjax(req, resp, cart);
+                aggiornaAjax(resp, cart, id, quantita);
                 return;
             }
 
             switch (azione) {
-                case "aggiungi" -> aggiungi(req, session, cart);
-                case "aggiorna" -> flash(session, aggiorna(parseIntOrNull(req.getParameter("id")),
-                                                           parseQuantita(req.getParameter("quantita")), cart));
-                case "rimuovi"  -> rimuovi(req, cart);
+                case "aggiungi" -> flash(session, cartService.aggiungi(cart, id, quantita));
+                case "aggiorna" -> flash(session, cartService.aggiorna(cart, id, quantita));
+                case "rimuovi"  -> { if (id != null) cart.remove(id); }
                 case "svuota"   -> cart.clear();
                 default -> {
                     resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
@@ -107,17 +101,15 @@ public class CarrelloServlet extends HttpServlet {
     }
 
     // ------------------------------------------------------------------ aggiornamento via AJAX
-    private void aggiornaAjax(HttpServletRequest req, HttpServletResponse resp, Cart cart)
+    private void aggiornaAjax(HttpServletResponse resp, Cart cart, Integer id, Integer quantita)
             throws SQLException, IOException {
-
-        Integer id = parseIntOrNull(req.getParameter("id"));
-        Integer q = parseQuantita(req.getParameter("quantita"));
 
         resp.setContentType("application/json");
         resp.setCharacterEncoding("UTF-8");
         resp.setHeader("Cache-Control", "no-store");
 
-        if (id == null || q == null || cart.getQuantita(id) == 0) {
+        Esito esito = cartService.aggiorna(cart, id, quantita);
+        if (esito.stato() == Stato.ERRORE) {
             // quantità fuori da 1-99, oppure prodotto non nel carrello (es. sessione scaduta)
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             resp.getWriter().write("{\"ok\":false,\"messaggio\":"
@@ -125,9 +117,7 @@ public class CarrelloServlet extends HttpServlet {
             return;
         }
 
-        Esito esito = aggiorna(id, q, cart);
-        Riepilogo r = riepilogo(cart);          // rilegge dal database e riallinea il carrello
-
+        Riepilogo r = cartService.riepilogo(cart);   // rilegge dal database e riallinea il carrello
         CartLine riga = null;
         for (CartLine l : r.righe()) {
             if (l.getProdotto().getId() == id) {
@@ -135,7 +125,7 @@ public class CarrelloServlet extends HttpServlet {
             }
         }
 
-        String messaggio = esito.errore() ? esito.messaggio() : r.avviso();
+        String messaggio = (esito.stato() == Stato.AVVISO) ? esito.messaggio() : r.avviso();
         StringBuilder json = new StringBuilder("{\"ok\":true");
         json.append(",\"id\":").append(id);
         json.append(",\"quantita\":").append(riga == null ? 0 : riga.getQuantita());
@@ -148,108 +138,16 @@ public class CarrelloServlet extends HttpServlet {
         resp.getWriter().write(json.toString());
     }
 
+    // ------------------------------------------------------------------ utilità HTTP
     private static boolean wantsJson(HttpServletRequest req) {
         String accept = req.getHeader("Accept");
         return accept != null && accept.contains("application/json");
     }
 
-    // ------------------------------------------------------------------ riepilogo (usato da GET e AJAX)
-    /**
-     * Costruisce le righe del carrello leggendo i prodotti dal database in una sola query, e riallinea
-     * il carrello: toglie i prodotti non più disponibili e riduce le quantità oltre la giacenza.
-     */
-    private Riepilogo riepilogo(Cart cart) throws SQLException {
-        List<CartLine> righe = new ArrayList<>();
-        BigDecimal totale = BigDecimal.ZERO;
-        String avviso = null;
-
-        if (cart != null && !cart.isEmpty()) {
-            Map<Integer, Product> prodotti = new HashMap<>();
-            for (Product p : productDAO.findActiveByIds(cart.getItems().keySet())) {
-                prodotti.put(p.getId(), p);
-            }
-
-            for (Map.Entry<Integer, Integer> e : cart.getItems().entrySet()) {
-                Product p = prodotti.get(e.getKey());
-                int quantita = e.getValue();
-
-                if (p == null || p.getGiacenza() <= 0) {
-                    cart.remove(e.getKey());
-                    avviso = "Alcuni prodotti non sono più disponibili e sono stati rimossi dal carrello.";
-                    continue;
-                }
-                if (quantita > p.getGiacenza()) {
-                    quantita = p.getGiacenza();
-                    cart.set(p.getId(), quantita);
-                    avviso = "Alcune quantità sono state ridotte in base alla disponibilità.";
-                }
-                CartLine riga = new CartLine(p, quantita);
-                righe.add(riga);
-                totale = totale.add(riga.getSubtotale());
-            }
-        }
-        return new Riepilogo(righe, totale, avviso);
-    }
-
-    // ------------------------------------------------------------------ azioni
-    private void aggiungi(HttpServletRequest req, HttpSession session, Cart cart) throws SQLException {
-        Integer id = parseIntOrNull(req.getParameter("id"));
-        Integer q = parseQuantita(req.getParameter("quantita"));
-        if (id == null || q == null) {
-            session.setAttribute(SessionKeys.FLASH_ERR, "Dati non validi.");
-            return;
-        }
-        Product p = productDAO.findActiveById(id);
-        if (p == null) {
-            session.setAttribute(SessionKeys.FLASH_ERR, "Prodotto non disponibile.");
-            return;
-        }
-        if (p.getGiacenza() <= 0) {
-            session.setAttribute(SessionKeys.FLASH_ERR, "«" + p.getNome() + "» è esaurito.");
-            return;
-        }
-        int nuova = cart.getQuantita(id) + q;
-        nuova = Math.min(nuova, Cart.MAX_QUANTITA);
-        if (nuova > p.getGiacenza()) {
-            nuova = p.getGiacenza();
-            session.setAttribute(SessionKeys.FLASH_ERR,
-                    "Disponibili solo " + p.getGiacenza() + " pezzi di «" + p.getNome() + "»: quantità adeguata.");
-        } else {
-            session.setAttribute(SessionKeys.FLASH_OK, "«" + p.getNome() + "» aggiunto al carrello.");
-        }
-        cart.set(id, nuova);
-    }
-
-    /** Imposta la quantità di un prodotto già nel carrello (valore assoluto, mai "+1"). */
-    private Esito aggiorna(Integer id, Integer q, Cart cart) throws SQLException {
-        if (id == null || q == null || cart.getQuantita(id) == 0) {
-            return new Esito("Dati non validi.", true);
-        }
-        Product p = productDAO.findActiveById(id);
-        if (p == null || p.getGiacenza() <= 0) {
-            cart.remove(id);
-            return new Esito("Prodotto non più disponibile: rimosso dal carrello.", true);
-        }
-        if (q > p.getGiacenza()) {
-            cart.set(id, p.getGiacenza());
-            return new Esito("Disponibili solo " + p.getGiacenza() + " pezzi di «" + p.getNome()
-                    + "»: quantità adeguata.", true);
-        }
-        cart.set(id, q);
-        return new Esito("Quantità aggiornata.", false);
-    }
-
-    private void rimuovi(HttpServletRequest req, Cart cart) {
-        Integer id = parseIntOrNull(req.getParameter("id"));
-        if (id != null) {
-            cart.remove(id);
-        }
-    }
-
-    // ------------------------------------------------------------------ utilità
     /** Salva l'esito come messaggio flash (mostrato una volta dopo il redirect). */
     private static void flash(HttpSession session, Esito esito) {
-        session.setAttribute(esito.errore() ? SessionKeys.FLASH_ERR : SessionKeys.FLASH_OK, esito.messaggio());
+        String chiave = (esito.stato() == Stato.OK) ? SessionKeys.FLASH_OK : SessionKeys.FLASH_ERR;
+        session.setAttribute(chiave, esito.messaggio());
     }
 
     private static Integer parseIntOrNull(String s) {
@@ -258,11 +156,5 @@ public class CarrelloServlet extends HttpServlet {
         } catch (NumberFormatException e) {
             return null;
         }
-    }
-
-    /** Quantità valida: intero da 1 a Cart.MAX_QUANTITA; altrimenti null. */
-    private static Integer parseQuantita(String s) {
-        Integer q = parseIntOrNull(s);
-        return (q == null || q < 1 || q > Cart.MAX_QUANTITA) ? null : q;
     }
 }

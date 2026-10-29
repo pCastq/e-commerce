@@ -6,7 +6,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.Product;
-import model.dao.ProductDAO;
+import model.service.ProductService;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -15,7 +15,7 @@ import java.sql.SQLException;
 @WebServlet("/prodotto")
 public class ProdottoServlet extends HttpServlet {
 
-    private final ProductDAO productDAO = new ProductDAO();
+    private final ProductService productService = new ProductService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -29,17 +29,18 @@ public class ProdottoServlet extends HttpServlet {
             return;
         }
 
+        Product p;
         try {
-            Product p = productDAO.findActiveById(id);
-            if (p == null) {
-                resp.sendError(HttpServletResponse.SC_NOT_FOUND);
-                return;
-            }
-            req.setAttribute("prodotto", p);
+            p = productService.trovaAttivo(id);
         } catch (SQLException e) {
             throw new ServletException("Errore di accesso al database", e);
         }
+        if (p == null) {
+            resp.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
 
+        req.setAttribute("prodotto", p);
         req.getRequestDispatcher("/WEB-INF/views/prodotto.jsp").forward(req, resp);
     }
 }

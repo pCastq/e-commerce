@@ -7,8 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import model.User;
-import model.dao.UserDAO;
-import util.PasswordUtil;
+import model.service.UserService;
 import util.SessionKeys;
 
 import java.io.IOException;
@@ -17,13 +16,13 @@ import java.sql.SQLException;
 /**
  * CONTROLLER del login.
  *  GET  /login -> form (se già loggato, torna alla home)
- *  POST /login -> verifica email+password; se ok crea la sessione e fa redirect
+ *  POST /login -> il service verifica email+password; se ok si prepara la sessione e si fa redirect
  */
 @WebServlet("/login")
 public class LoginServlet extends HttpServlet {
 
     private static final String VIEW = "/WEB-INF/views/login.jsp";
-    private final UserDAO userDAO = new UserDAO();
+    private final UserService userService = new UserService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -40,21 +39,19 @@ public class LoginServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
-        String email = req.getParameter("email");
-        email = (email == null) ? "" : email.trim().toLowerCase();
-        String password = req.getParameter("password");
+        String email = UserService.normalizzaEmail(req.getParameter("email"));
         String next = safeNext(req.getParameter("next"));
 
         User u;
         try {
-            u = email.isEmpty() ? null : userDAO.findByEmail(email);
+            u = userService.autentica(email, req.getParameter("password"));
         } catch (SQLException e) {
             throw new ServletException("Errore di accesso al database", e);
         }
 
         // Messaggio VOLUTAMENTE generico: non dice se a essere sbagliata è l'email o la password,
         // così nessuno può scoprire quali email sono registrate.
-        if (u == null || password == null || !PasswordUtil.matches(password, u.getPassword())) {
+        if (u == null) {
             req.setAttribute("errore", "Email o password errate.");
             req.setAttribute("email", email);
             req.setAttribute("next", next);
@@ -62,8 +59,7 @@ public class LoginServlet extends HttpServlet {
             return;
         }
 
-        // Login riuscito.
-        u.setPassword(null);                       // l'hash non deve restare in sessione
+        // Login riuscito: la sessione è una questione HTTP, quindi la gestisce la servlet.
         HttpSession session = req.getSession(true);   // la sessione che il visitatore ha già (o una nuova se manca)
         req.changeSessionId();                        // stessi dati (es. il carrello!), NUOVO id: anti session fixation
         session.setAttribute(SessionKeys.USER, u);

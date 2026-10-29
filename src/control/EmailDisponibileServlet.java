@@ -5,8 +5,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import model.dao.UserDAO;
-import util.Validator;
+import model.service.UserService;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -18,23 +17,21 @@ import java.sql.SQLException;
 @WebServlet("/api/email-disponibile")
 public class EmailDisponibileServlet extends HttpServlet {
 
-    private final UserDAO userDAO = new UserDAO();
+    private final UserService userService = new UserService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
         String email = req.getParameter("email");
-        email = (email == null) ? "" : email.trim().toLowerCase();
-
-        if (!Validator.isEmail(email)) {
+        if (!userService.isEmailValida(email)) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
 
         boolean disponibile;
         try {
-            disponibile = !userDAO.emailExists(email);
+            disponibile = userService.emailDisponibile(email);
         } catch (SQLException e) {
             throw new ServletException("Errore di accesso al database", e);
         }
