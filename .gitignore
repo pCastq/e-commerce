@@ -4,3 +4,5 @@ out/
 *.class
 *.war
 /docs/*
+CLAUDE.md
+AGENTS.md
