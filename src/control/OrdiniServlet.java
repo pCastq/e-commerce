@@ -7,7 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.User;
 import model.service.OrdineService;
-import util.SessionKeys;
+import util.SessionUtil;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -21,7 +21,7 @@ public class OrdiniServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        User utente = (User) req.getSession(false).getAttribute(SessionKeys.USER);
+        User utente = SessionUtil.currentUser(req);
         try {
             req.setAttribute("ordini", ordineService.ordiniDi(utente));
         } catch (SQLException e) {

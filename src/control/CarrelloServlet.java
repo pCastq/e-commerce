@@ -5,23 +5,22 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import model.Cart;
-import model.CartLine;
 import model.service.CartService;
+import model.service.CartService.Aggiornamento;
 import model.service.CartService.Esito;
 import model.service.CartService.Riepilogo;
 import model.service.CartService.Stato;
 import util.Json;
-import util.SessionKeys;
+import util.JsonResponse;
+import util.SessionUtil;
 
 import java.io.IOException;
 import java.sql.SQLException;
 
 /**
  * CONTROLLER del carrello (pubblico: non serve il login, il carrello sta nella sessione).
- * Le regole (quantità, giacenza, disponibilità) stanno in CartService: qui si legge la richiesta,
- * si chiama il service e si sceglie la risposta.
+ * Qui c'è solo HTTP: si leggono i parametri, si chiama CartService (che applica le regole) e si sceglie la risposta.
  *
  *  GET  /carrello  -> mostra il carrello
  *  POST /carrello  -> modifica il carrello. Il parametro "azione" dice cosa fare:
@@ -30,64 +29,47 @@ import java.sql.SQLException;
  * Due modi di rispondere a un POST:
  *  - normale (form HTML): redirect a /carrello (Post/Redirect/Get);
  *  - AJAX (solo per "aggiorna", quando il browser chiede application/json): niente redirect,
- *    risposta JSON con quantità reale, subtotale e totali, così la pagina si aggiorna senza ricaricarsi.
+ *    risposta JSON con quantità reale, subtotale e totali.
  */
 @WebServlet("/carrello")
 public class CarrelloServlet extends HttpServlet {
 
     private final CartService cartService = new CartService();
 
-    // ------------------------------------------------------------------ GET: mostra
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-
-        HttpSession session = req.getSession(false);
-        Cart cart = (session == null) ? null : (Cart) session.getAttribute(SessionKeys.CART);
-
         Riepilogo r;
         try {
-            r = cartService.riepilogo(cart);
+            r = cartService.riepilogo(SessionUtil.cartOrNull(req));
         } catch (SQLException e) {
             throw new ServletException("Errore di accesso al database", e);
         }
-
         req.setAttribute("righe", r.righe());
         req.setAttribute("totale", r.totale());
         req.setAttribute("avviso", r.avviso());
         req.getRequestDispatcher("/WEB-INF/views/carrello.jsp").forward(req, resp);
     }
 
-    // ------------------------------------------------------------------ POST: modifica
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
-        String azione = req.getParameter("azione");
-        if (azione == null) {
-            azione = "";
-        }
+        String azione = req.getParameter("azione") == null ? "" : req.getParameter("azione");
         Integer id = parseIntOrNull(req.getParameter("id"));            // null = non numerico
         Integer quantita = parseIntOrNull(req.getParameter("quantita"));
-
-        HttpSession session = req.getSession(true);        // true: qui il carrello va creato se manca
-        Cart cart = (Cart) session.getAttribute(SessionKeys.CART);
-        if (cart == null) {
-            cart = new Cart();
-            session.setAttribute(SessionKeys.CART, cart);
-        }
+        Cart cart = SessionUtil.cartOrCreate(req);
 
         try {
             if (azione.equals("aggiorna") && wantsJson(req)) {
-                aggiornaAjax(resp, cart, id, quantita);
+                rispondiJson(resp, cartService.aggiornaERiepiloga(cart, id, quantita), id);
                 return;
             }
-
             switch (azione) {
-                case "aggiungi" -> flash(session, cartService.aggiungi(cart, id, quantita));
-                case "aggiorna" -> flash(session, cartService.aggiorna(cart, id, quantita));
-                case "rimuovi"  -> { if (id != null) cart.remove(id); }
-                case "svuota"   -> cart.clear();
+                case "aggiungi" -> flash(req, cartService.aggiungi(cart, id, quantita));
+                case "aggiorna" -> flash(req, cartService.aggiorna(cart, id, quantita));
+                case "rimuovi"  -> cartService.rimuovi(cart, id);
+                case "svuota"   -> cartService.svuota(cart);
                 default -> {
                     resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
                     return;
@@ -96,58 +78,41 @@ public class CarrelloServlet extends HttpServlet {
         } catch (SQLException e) {
             throw new ServletException("Errore di accesso al database", e);
         }
-
         resp.sendRedirect(req.getContextPath() + "/carrello");
     }
 
-    // ------------------------------------------------------------------ aggiornamento via AJAX
-    private void aggiornaAjax(HttpServletResponse resp, Cart cart, Integer id, Integer quantita)
-            throws SQLException, IOException {
-
-        resp.setContentType("application/json");
-        resp.setCharacterEncoding("UTF-8");
-        resp.setHeader("Cache-Control", "no-store");
-
-        Esito esito = cartService.aggiorna(cart, id, quantita);
-        if (esito.stato() == Stato.ERRORE) {
+    /** Traduce il risultato del service in JSON (la forma della risposta è una scelta della servlet/view). */
+    private static void rispondiJson(HttpServletResponse resp, Aggiornamento a, Integer id) throws IOException {
+        if (a.esito().stato() == Stato.ERRORE) {
             // quantità fuori da 1-99, oppure prodotto non nel carrello (es. sessione scaduta)
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().write("{\"ok\":false,\"messaggio\":"
-                    + Json.quote("Impossibile aggiornare la quantità. Ricarica la pagina.") + "}");
+            JsonResponse.send(resp, HttpServletResponse.SC_BAD_REQUEST, Json.object(
+                    "ok", false,
+                    "messaggio", "Impossibile aggiornare la quantità. Ricarica la pagina."));
             return;
         }
-
-        Riepilogo r = cartService.riepilogo(cart);   // rilegge dal database e riallinea il carrello
-        CartLine riga = null;
-        for (CartLine l : r.righe()) {
-            if (l.getProdotto().getId() == id) {
-                riga = l;
-            }
-        }
-
-        String messaggio = (esito.stato() == Stato.AVVISO) ? esito.messaggio() : r.avviso();
-        StringBuilder json = new StringBuilder("{\"ok\":true");
-        json.append(",\"id\":").append(id);
-        json.append(",\"quantita\":").append(riga == null ? 0 : riga.getQuantita());
-        json.append(",\"rimosso\":").append(riga == null);
-        json.append(",\"messaggio\":").append(Json.quote(messaggio));
-        json.append(",\"subtotale\":").append(Json.quote(riga == null ? null : riga.getSubtotale().toPlainString()));
-        json.append(",\"totale\":").append(Json.quote(r.totale().toPlainString()));
-        json.append(",\"totaleArticoli\":").append(cart.getTotalItems());
-        json.append('}');
-        resp.getWriter().write(json.toString());
+        JsonResponse.send(resp, Json.object(
+                "ok", true,
+                "id", id,
+                "quantita", a.riga() == null ? 0 : a.riga().getQuantita(),
+                "rimosso", a.riga() == null,
+                "messaggio", a.messaggio(),
+                "subtotale", a.riga() == null ? null : a.riga().getSubtotale().toPlainString(),
+                "totale", a.riepilogo().totale().toPlainString(),
+                "totaleArticoli", a.totaleArticoli()));
     }
 
-    // ------------------------------------------------------------------ utilità HTTP
     private static boolean wantsJson(HttpServletRequest req) {
         String accept = req.getHeader("Accept");
         return accept != null && accept.contains("application/json");
     }
 
-    /** Salva l'esito come messaggio flash (mostrato una volta dopo il redirect). */
-    private static void flash(HttpSession session, Esito esito) {
-        String chiave = (esito.stato() == Stato.OK) ? SessionKeys.FLASH_OK : SessionKeys.FLASH_ERR;
-        session.setAttribute(chiave, esito.messaggio());
+    /** Salva l'esito come messaggio flash: verde se tutto ok, rosso altrimenti. */
+    private static void flash(HttpServletRequest req, Esito esito) {
+        if (esito.stato() == Stato.OK) {
+            SessionUtil.flashOk(req, esito.messaggio());
+        } else {
+            SessionUtil.flashErr(req, esito.messaggio());
+        }
     }
 
     private static Integer parseIntOrNull(String s) {

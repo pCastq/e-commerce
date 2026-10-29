@@ -72,7 +72,7 @@ public class OrdineService {
             // stesso ordine e così non possono bloccarsi a vicenda (deadlock).
             Map<Integer, Integer> righe = new TreeMap<>(cart.getItems());
             if (righe.isEmpty()) {
-                return new Risultato(null, Problema.CARRELLO_VUOTO, "Il carrello è vuoto.");
+                return new Risultato(null, Problema.CARRELLO_VUOTO, CartService.MSG_CARRELLO_VUOTO);
             }
 
             int idOrdine;

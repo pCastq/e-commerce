@@ -8,13 +8,10 @@ import jakarta.servlet.ServletResponse;
 import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
-
-import util.SessionKeys;
+import util.Navigation;
+import util.SessionUtil;
 
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 
 /**
  * FILTRO di controllo accessi: le pagine elencate qui richiedono di essere loggati.
@@ -31,19 +28,10 @@ public class AuthFilter implements Filter {
         HttpServletRequest req = (HttpServletRequest) request;
         HttpServletResponse resp = (HttpServletResponse) response;
 
-        HttpSession session = req.getSession(false);      // false: NON creare una sessione solo per controllare
-        boolean logged = session != null && session.getAttribute(SessionKeys.USER) != null;
-
-        if (logged) {
+        if (SessionUtil.isLogged(req)) {
             chain.doFilter(request, response);            // ok, prosegui verso la servlet
             return;
         }
-
-        String path = req.getRequestURI().substring(req.getContextPath().length());
-        if (req.getQueryString() != null) {
-            path += "?" + req.getQueryString();
-        }
-        String next = URLEncoder.encode(path, StandardCharsets.UTF_8);
-        resp.sendRedirect(req.getContextPath() + "/login?next=" + next);
+        Navigation.redirectToLogin(req, resp);            // altrimenti al login, ricordando la pagina richiesta
     }
 }

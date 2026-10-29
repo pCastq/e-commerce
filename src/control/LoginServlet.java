@@ -8,7 +8,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import model.User;
 import model.service.UserService;
+import util.Navigation;
 import util.SessionKeys;
+import util.SessionUtil;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -27,11 +29,11 @@ public class LoginServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        if (isLogged(req)) {
+        if (SessionUtil.isLogged(req)) {
             resp.sendRedirect(req.getContextPath() + "/");
             return;
         }
-        req.setAttribute("next", safeNext(req.getParameter("next")));
+        req.setAttribute("next", Navigation.safeNext(req.getParameter("next")));
         req.getRequestDispatcher(VIEW).forward(req, resp);
     }
 
@@ -40,7 +42,7 @@ public class LoginServlet extends HttpServlet {
             throws ServletException, IOException {
 
         String email = UserService.normalizzaEmail(req.getParameter("email"));
-        String next = safeNext(req.getParameter("next"));
+        String next = Navigation.safeNext(req.getParameter("next"));
 
         User u;
         try {
@@ -66,23 +68,5 @@ public class LoginServlet extends HttpServlet {
 
         String target = next != null ? next : "/";
         resp.sendRedirect(req.getContextPath() + target);
-    }
-
-    private static boolean isLogged(HttpServletRequest req) {
-        HttpSession s = req.getSession(false);
-        return s != null && s.getAttribute(SessionKeys.USER) != null;
-    }
-
-    /**
-     * Accetta come "pagina di ritorno" solo un percorso interno all'applicazione (es. /profilo).
-     * Rifiuta indirizzi esterni (http://..., //sito.com): sarebbe un "open redirect".
-     */
-    static String safeNext(String next) {
-        if (next == null || next.isEmpty()) return null;
-        if (!next.startsWith("/") || next.startsWith("//") || next.contains("\\")
-                || next.contains(":") || next.contains("\r") || next.contains("\n")) {
-            return null;
-        }
-        return next;
     }
 }

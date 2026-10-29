@@ -6,6 +6,8 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.service.UserService;
+import util.Json;
+import util.JsonResponse;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -36,9 +38,6 @@ public class EmailDisponibileServlet extends HttpServlet {
             throw new ServletException("Errore di accesso al database", e);
         }
 
-        resp.setContentType("application/json");
-        resp.setCharacterEncoding("UTF-8");
-        resp.setHeader("Cache-Control", "no-store");
-        resp.getWriter().write("{\"disponibile\":" + disponibile + "}");
+        JsonResponse.send(resp, Json.object("disponibile", disponibile));
     }
 }

@@ -21,6 +21,19 @@ public class ProductService {
         return q.isEmpty() ? productDAO.findAllActive() : productDAO.findActiveByName(q);
     }
 
+    /** Lunghezza minima del testo per cercare suggerimenti (con 1 lettera i risultati sarebbero troppi e inutili). */
+    public static final int SUGGERIMENTI_MIN_CARATTERI = 2;
+    private static final int SUGGERIMENTI_MAX = 6;
+
+    /** Pochi prodotti che corrispondono al testo parziale: serve al menu a tendina della ricerca. */
+    public List<Product> suggerimenti(String testo) throws SQLException {
+        String q = (testo == null) ? "" : testo.trim();
+        if (q.length() < SUGGERIMENTI_MIN_CARATTERI || q.length() > 100) {
+            return List.of();
+        }
+        return productDAO.suggestByName(q, SUGGERIMENTI_MAX);
+    }
+
     /** Un prodotto a catalogo, oppure null se non esiste o non è più attivo. */
     public Product trovaAttivo(int id) throws SQLException {
         return productDAO.findActiveById(id);

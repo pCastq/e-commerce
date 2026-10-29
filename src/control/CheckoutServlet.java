@@ -5,14 +5,13 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import model.Cart;
 import model.User;
 import model.service.CartService;
 import model.service.CartService.Riepilogo;
 import model.service.OrdineService;
 import model.service.OrdineService.Risultato;
-import util.SessionKeys;
+import util.SessionUtil;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -43,13 +42,12 @@ public class CheckoutServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
-        HttpSession session = req.getSession(false);        // il filtro garantisce che esista
-        User utente = (User) session.getAttribute(SessionKeys.USER);
-        Cart cart = (Cart) session.getAttribute(SessionKeys.CART);
+        User utente = SessionUtil.currentUser(req);          // il filtro garantisce che esista
+        Cart cart = SessionUtil.cartOrNull(req);
         String indirizzo = req.getParameter("indirizzo");
 
         if (cart == null) {
-            session.setAttribute(SessionKeys.FLASH_ERR, "Il carrello è vuoto.");
+            SessionUtil.flashErr(req, CartService.MSG_CARRELLO_VUOTO);
             resp.sendRedirect(req.getContextPath() + "/carrello");
             return;
         }
@@ -62,7 +60,7 @@ public class CheckoutServlet extends HttpServlet {
         }
 
         if (r.ok()) {
-            session.setAttribute(SessionKeys.FLASH_OK, "Ordine effettuato. Grazie per l'acquisto!");
+            SessionUtil.flashOk(req, "Ordine effettuato. Grazie per l'acquisto!");
             resp.sendRedirect(req.getContextPath() + "/ordini/dettaglio?id=" + r.idOrdine());
             return;
         }
@@ -78,7 +76,7 @@ public class CheckoutServlet extends HttpServlet {
                 req.getRequestDispatcher(VIEW).forward(req, resp);
             }
             default -> {
-                session.setAttribute(SessionKeys.FLASH_ERR, r.messaggio());
+                SessionUtil.flashErr(req, r.messaggio());
                 resp.sendRedirect(req.getContextPath() + "/carrello");
             }
         }
@@ -87,16 +85,14 @@ public class CheckoutServlet extends HttpServlet {
     /** Carica il riepilogo; se il carrello è vuoto fa redirect al carrello e restituisce false. */
     private boolean mostraRiepilogo(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        HttpSession session = req.getSession(false);
-        Cart cart = (Cart) session.getAttribute(SessionKeys.CART);
         Riepilogo riepilogo;
         try {
-            riepilogo = cartService.riepilogo(cart);
+            riepilogo = cartService.riepilogo(SessionUtil.cartOrNull(req));
         } catch (SQLException e) {
             throw new ServletException("Errore di accesso al database", e);
         }
-        if (riepilogo.righe().isEmpty()) {
-            session.setAttribute(SessionKeys.FLASH_ERR, "Il carrello è vuoto.");
+        if (riepilogo.vuoto()) {
+            SessionUtil.flashErr(req, CartService.MSG_CARRELLO_VUOTO);
             resp.sendRedirect(req.getContextPath() + "/carrello");
             return false;
         }

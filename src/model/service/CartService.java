@@ -27,7 +27,18 @@ public class CartService {
     public record Esito(Stato stato, String messaggio) { }
 
     /** Righe da mostrare, totale (IVA inclusa) e un eventuale avviso. */
-    public record Riepilogo(List<CartLine> righe, BigDecimal totale, String avviso) { }
+    public record Riepilogo(List<CartLine> righe, BigDecimal totale, String avviso) {
+        public boolean vuoto() { return righe.isEmpty(); }
+    }
+
+    /**
+     * Risultato di un aggiornamento di quantità, con tutto ciò che serve a rispondere in AJAX.
+     * Se esito.stato() è ERRORE gli altri campi sono vuoti (null / 0).
+     * riga: la riga aggiornata (null se il prodotto è stato rimosso); messaggio: cosa dire all'utente (o null).
+     */
+    public record Aggiornamento(Esito esito, Riepilogo riepilogo, CartLine riga, String messaggio, int totaleArticoli) { }
+
+    public static final String MSG_CARRELLO_VUOTO = "Il carrello è vuoto.";
 
     /**
      * Aggiunge al carrello (sommando a quanto già presente).
@@ -72,6 +83,38 @@ public class CartService {
         }
         cart.set(id, quantita);
         return new Esito(Stato.OK, "Quantità aggiornata.");
+    }
+
+    /**
+     * Aggiorna la quantità e subito dopo rilegge il carrello dal database: restituisce in un colpo solo
+     * l'esito, la riga aggiornata, i totali e il messaggio. È ciò che serve alla risposta AJAX.
+     */
+    public Aggiornamento aggiornaERiepiloga(Cart cart, Integer id, Integer quantita) throws SQLException {
+        Esito esito = aggiorna(cart, id, quantita);
+        if (esito.stato() == Stato.ERRORE) {
+            return new Aggiornamento(esito, null, null, null, cart.getTotalItems());
+        }
+        Riepilogo r = riepilogo(cart);          // riallinea anche il carrello (es. altri prodotti esauriti nel frattempo)
+        CartLine riga = null;
+        for (CartLine l : r.righe()) {
+            if (l.getProdotto().getId() == id) {
+                riga = l;
+            }
+        }
+        String messaggio = (esito.stato() == Stato.AVVISO) ? esito.messaggio() : r.avviso();
+        return new Aggiornamento(esito, r, riga, messaggio, cart.getTotalItems());
+    }
+
+    /** Toglie un prodotto dal carrello (id null = non numerico: non fa nulla). */
+    public void rimuovi(Cart cart, Integer id) {
+        if (id != null) {
+            cart.remove(id);
+        }
+    }
+
+    /** Svuota il carrello. */
+    public void svuota(Cart cart) {
+        cart.clear();
     }
 
     /**

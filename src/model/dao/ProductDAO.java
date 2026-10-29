@@ -56,6 +56,33 @@ public class ProductDAO {
         return result;
     }
 
+    /**
+     * Suggerimenti per la ricerca: al massimo "limit" prodotti attivi il cui nome contiene il testo.
+     * Prima quelli che INIZIANO col testo, poi gli altri, ciascun gruppo in ordine alfabetico.
+     * LIMIT lo fa il database: non si caricano tutti i prodotti per poi buttarne via la maggior parte.
+     */
+    public List<Product> suggestByName(String text, int limit) throws SQLException {
+        String sql = "SELECT " + COLUMNS + " FROM prodotti "
+                   + "WHERE attivo = ? AND nome ILIKE ? ESCAPE '\\' "
+                   + "ORDER BY (nome ILIKE ? ESCAPE '\\') DESC, nome LIMIT ?";
+        List<Product> result = new ArrayList<>();
+        String escaped = escapeLike(text);
+
+        try (Connection con = Database.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setBoolean(1, true);
+            ps.setString(2, "%" + escaped + "%");
+            ps.setString(3, escaped + "%");
+            ps.setInt(4, limit);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    result.add(map(rs));
+                }
+            }
+        }
+        return result;
+    }
+
     /** Un prodotto attivo dato il suo id; null se non esiste o non è più a catalogo. */
     public Product findActiveById(int id) throws SQLException {
         String sql = "SELECT " + COLUMNS + " FROM prodotti WHERE id = ? AND attivo = ?";

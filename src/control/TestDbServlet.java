@@ -6,7 +6,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.Product;
-import model.dao.ProductDAO;
+import model.service.ProductService;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -20,11 +20,13 @@ import java.util.List;
 @WebServlet("/test-db")
 public class TestDbServlet extends HttpServlet {
 
+    private final ProductService productService = new ProductService();
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         try {
-            List<Product> prodotti = new ProductDAO().findAllActive();
+            List<Product> prodotti = productService.catalogo("");
             req.setAttribute("prodotti", prodotti);
         } catch (SQLException e) {
             throw new ServletException("Errore di accesso al database", e);

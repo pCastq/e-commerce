@@ -8,14 +8,11 @@ import jakarta.servlet.ServletResponse;
 import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import model.User;
-
-import util.SessionKeys;
+import util.Navigation;
+import util.SessionUtil;
 
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 
 /**
  * FILTRO dell'area amministratore (/admin/*):
@@ -33,13 +30,10 @@ public class AdminFilter implements Filter {
         HttpServletRequest req = (HttpServletRequest) request;
         HttpServletResponse resp = (HttpServletResponse) response;
 
-        HttpSession session = req.getSession(false);
-        User u = (session == null) ? null : (User) session.getAttribute(SessionKeys.USER);
+        User u = SessionUtil.currentUser(req);
 
         if (u == null) {
-            String path = req.getRequestURI().substring(req.getContextPath().length());
-            resp.sendRedirect(req.getContextPath() + "/login?next="
-                    + URLEncoder.encode(path, StandardCharsets.UTF_8));
+            Navigation.redirectToLogin(req, resp);
         } else if (!u.isAdmin()) {
             resp.sendError(HttpServletResponse.SC_FORBIDDEN);
         } else {

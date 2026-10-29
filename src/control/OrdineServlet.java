@@ -8,7 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import model.Ordine;
 import model.User;
 import model.service.OrdineService;
-import util.SessionKeys;
+import util.SessionUtil;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -36,7 +36,7 @@ public class OrdineServlet extends HttpServlet {
             return;
         }
 
-        User utente = (User) req.getSession(false).getAttribute(SessionKeys.USER);
+        User utente = SessionUtil.currentUser(req);
         Ordine ordine;
         try {
             ordine = ordineService.trovaDi(id, utente);
