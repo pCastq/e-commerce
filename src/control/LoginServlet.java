@@ -66,7 +66,8 @@ public class LoginServlet extends HttpServlet {
         req.changeSessionId();                        // stessi dati (es. il carrello!), NUOVO id: anti session fixation
         session.setAttribute(SessionKeys.USER, u);
 
-        String target = next != null ? next : "/";
+        // senza una pagina richiesta: l'admin va al suo pannello, il cliente alla home
+        String target = next != null ? next : (u.isAdmin() ? "/admin/prodotti" : "/");
         resp.sendRedirect(req.getContextPath() + target);
     }
 }

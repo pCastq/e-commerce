@@ -145,6 +145,85 @@ public class ProductDAO {
         }
     }
 
+    // ------------------------------------------------------------------ area amministratore
+
+    /** TUTTI i prodotti, anche quelli eliminati (attivo = false): serve all'elenco dell'admin. */
+    public List<Product> findAll() throws SQLException {
+        String sql = "SELECT " + COLUMNS + " FROM prodotti ORDER BY attivo DESC, nome";
+        List<Product> result = new ArrayList<>();
+        try (Connection con = Database.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                result.add(map(rs));
+            }
+        }
+        return result;
+    }
+
+    /** Un prodotto dato l'id, attivo o no; null se non esiste. */
+    public Product findById(int id) throws SQLException {
+        String sql = "SELECT " + COLUMNS + " FROM prodotti WHERE id = ?";
+        try (Connection con = Database.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? map(rs) : null;
+            }
+        }
+    }
+
+    /** Inserisce un nuovo prodotto (sempre attivo) e restituisce l'id generato. */
+    public int insert(Product p) throws SQLException {
+        String sql = "INSERT INTO prodotti (nome, descrizione, prezzo, iva, giacenza, immagine) "
+                   + "VALUES (?, ?, ?, ?, ?, ?) RETURNING id";
+        try (Connection con = Database.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, p.getNome());
+            ps.setString(2, p.getDescrizione());
+            ps.setBigDecimal(3, p.getPrezzo());
+            ps.setBigDecimal(4, p.getIva());
+            ps.setInt(5, p.getGiacenza());
+            ps.setString(6, p.getImmagine());
+            try (ResultSet rs = ps.executeQuery()) {
+                rs.next();
+                return rs.getInt(1);
+            }
+        }
+    }
+
+    /** Aggiorna i dati di un prodotto (non tocca "attivo"). Restituisce le righe modificate (0 = id inesistente). */
+    public int update(Product p) throws SQLException {
+        String sql = "UPDATE prodotti SET nome = ?, descrizione = ?, prezzo = ?, iva = ?, giacenza = ?, immagine = ? "
+                   + "WHERE id = ?";
+        try (Connection con = Database.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, p.getNome());
+            ps.setString(2, p.getDescrizione());
+            ps.setBigDecimal(3, p.getPrezzo());
+            ps.setBigDecimal(4, p.getIva());
+            ps.setInt(5, p.getGiacenza());
+            ps.setString(6, p.getImmagine());
+            ps.setInt(7, p.getId());
+            return ps.executeUpdate();
+        }
+    }
+
+    /**
+     * Eliminazione LOGICA (soft delete): il prodotto resta nel database con attivo = false.
+     * Serve perché gli ordini già fatti lo referenziano (e le fatture devono continuare a mostrarlo).
+     * Con attivo = true lo si ripristina. Restituisce le righe modificate.
+     */
+    public int setAttivo(int id, boolean attivo) throws SQLException {
+        String sql = "UPDATE prodotti SET attivo = ? WHERE id = ?";
+        try (Connection con = Database.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setBoolean(1, attivo);
+            ps.setInt(2, id);
+            return ps.executeUpdate();
+        }
+    }
+
     /** Neutralizza % _ e \ che in LIKE hanno un significato speciale. */
     private static String escapeLike(String text) {
         return text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");

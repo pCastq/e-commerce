@@ -39,5 +39,10 @@ public class Product {
     public void setAttivo(boolean attivo) { this.attivo = attivo; }
 
     public String getImmagine() { return immagine; }
+
+    /** Nome del file da mostrare: se il prodotto non ha un'immagine, un segnaposto. Usabile in EL come ${p.immagineFile}. */
+    public String getImmagineFile() {
+        return (immagine == null || immagine.isBlank()) ? "nessuna.svg" : immagine;
+    }
     public void setImmagine(String immagine) { this.immagine = immagine; }
 }

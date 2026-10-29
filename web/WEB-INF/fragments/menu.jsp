@@ -18,6 +18,9 @@
     <c:choose>
         <c:when test="${not empty sessionScope.utente}">
             <a href="${pageContext.request.contextPath}/ordini" class="${param.active == 'ordini' ? 'active' : ''}">I miei ordini</a>
+            <c:if test="${sessionScope.utente.admin}">
+                <a href="${pageContext.request.contextPath}/admin/prodotti" class="${param.active == 'admin' ? 'active' : ''}">Admin</a>
+            </c:if>
             <a href="${pageContext.request.contextPath}/profilo" class="${param.active == 'profilo' ? 'active' : ''}">Ciao, <c:out value="${sessionScope.utente.nome}"/></a>
             <form class="logout-form" method="post" action="${pageContext.request.contextPath}/logout">
                 <button type="submit" class="link-button">Esci</button>

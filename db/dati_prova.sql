@@ -34,8 +34,8 @@ INSERT INTO prodotti (nome, descrizione, prezzo, iva, giacenza, immagine) VALUES
  'Frollini croccanti con gocce di cioccolato fondente, perfetti per la colazione o la merenda.',
  2.29, 10.00, 70, 'biscotti.jpg');
 
--- Utente amministratore di prova: admin@shop.it / password Admin2024!
--- (la colonna password contiene l'hash SHA-256 di "Admin2024!", non la password)
+-- Utente amministratore di prova: admin@email.it / password Admin2026!
+-- (la colonna password contiene l'hash SHA-256 di "Admin2026!", non la password)
 INSERT INTO utenti (nome, cognome, email, password, ruolo) VALUES
-('Admin', 'Negozio', 'admin@shop.it',
- '5a55c7873ed7338f35d782adb513d336a36086ddec0fa4b6444fda6d440387c2', 'admin');
+('Admin', 'Negozio', 'admin@email.it',
+ '04445e6487736590d1ef50186b414e737e0164683cbbec64e00e73c000fd3bef', 'admin');

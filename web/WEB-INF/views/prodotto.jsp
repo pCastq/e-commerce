@@ -12,7 +12,7 @@
 
 <section class="product-detail">
     <div class="product-image product-image-big">
-        <img src="${pageContext.request.contextPath}/img/prodotti/<c:out value='${prodotto.immagine}'/>"
+        <img src="${pageContext.request.contextPath}/img/prodotti/<c:out value='${prodotto.immagineFile}'/>"
              alt="<c:out value='${prodotto.nome}'/>">
     </div>
     <div class="product-info">

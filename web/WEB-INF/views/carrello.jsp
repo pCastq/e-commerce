@@ -28,7 +28,7 @@
         <div class="cart-list">
             <c:forEach var="riga" items="${righe}">
                 <article class="cart-line" data-id="${riga.prodotto.id}">
-                    <img src="${pageContext.request.contextPath}/img/prodotti/<c:out value='${riga.prodotto.immagine}'/>"
+                    <img src="${pageContext.request.contextPath}/img/prodotti/<c:out value='${riga.prodotto.immagineFile}'/>"
                          alt="<c:out value='${riga.prodotto.nome}'/>">
                     <div class="cart-info">
                         <a href="${pageContext.request.contextPath}/prodotto?id=${riga.prodotto.id}"><strong><c:out value="${riga.prodotto.nome}"/></strong></a>

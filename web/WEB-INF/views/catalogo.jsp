@@ -34,7 +34,7 @@
                 <article class="product-card">
                     <a class="product-link" href="${pageContext.request.contextPath}/prodotto?id=${p.id}">
                         <div class="product-image">
-                            <img src="${pageContext.request.contextPath}/img/prodotti/<c:out value='${p.immagine}'/>"
+                            <img src="${pageContext.request.contextPath}/img/prodotti/<c:out value='${p.immagineFile}'/>"
                                  alt="<c:out value='${p.nome}'/>" loading="lazy">
                         </div>
                         <h2 class="product-name"><c:out value="${p.nome}"/></h2>
