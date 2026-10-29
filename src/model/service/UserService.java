@@ -83,7 +83,6 @@ public class UserService {
                 userDAO.insertCliente(u);
             } catch (SQLException e) {
                 if (UserDAO.UNIQUE_VIOLATION.equals(e.getSQLState())) {
-                    // un altro utente ha preso la stessa email un istante prima del nostro INSERT
                     errori.put("email", "Questa email è già registrata.");
                 } else {
                     throw e;
@@ -103,7 +102,6 @@ public class UserService {
             return null;
         }
         User u = userDAO.findByEmail(email);
-        // con || se u è null Java non valuta il resto: niente NullPointerException
         if (u == null || !PasswordUtil.matches(password, u.getPassword())) {
             return null;
         }

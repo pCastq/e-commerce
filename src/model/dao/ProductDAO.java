@@ -96,6 +96,28 @@ public class ProductDAO {
         return result;
     }
 
+    /**
+     * Scala la giacenza DENTRO una transazione (usa la Connection ricevuta, non ne apre una nuova).
+     * UPDATE condizionato: la giacenza scende solo se ce n'è abbastanza (e il prodotto è attivo).
+     * Il controllo e la modifica avvengono in UN'unica istruzione atomica: due clienti insieme non possono
+     * comprare lo stesso ultimo pezzo. RETURNING restituisce i dati del prodotto proprio come erano
+     * in quel momento (nome, prezzo, IVA). Se la giacenza non basta, nessuna riga cambia e torna null.
+     */
+    public Product scalaGiacenza(Connection con, int id, int quantita) throws SQLException {
+        String sql = "UPDATE prodotti SET giacenza = giacenza - ? "
+                   + "WHERE id = ? AND attivo = ? AND giacenza >= ? "
+                   + "RETURNING " + COLUMNS;
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, quantita);
+            ps.setInt(2, id);
+            ps.setBoolean(3, true);
+            ps.setInt(4, quantita);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? map(rs) : null;
+            }
+        }
+    }
+
     /** Neutralizza % _ e \ che in LIKE hanno un significato speciale. */
     private static String escapeLike(String text) {
         return text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");

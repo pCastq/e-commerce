@@ -48,7 +48,7 @@ public class CartService {
         int nuova = Math.min(cart.getQuantita(id) + quantita, Cart.MAX_QUANTITA);
         if (nuova > p.getGiacenza()) {
             cart.set(id, p.getGiacenza());
-            return new Esito(Stato.AVVISO, "Disponibili solo " + p.getGiacenza() + " pezzi di «"
+            return new Esito(Stato.AVVISO, soloDisponibili(p.getGiacenza()) + " di «"
                     + p.getNome() + "»: quantità adeguata.");
         }
         cart.set(id, nuova);
@@ -67,7 +67,7 @@ public class CartService {
         }
         if (quantita > p.getGiacenza()) {
             cart.set(id, p.getGiacenza());
-            return new Esito(Stato.AVVISO, "Disponibili solo " + p.getGiacenza() + " pezzi di «"
+            return new Esito(Stato.AVVISO, soloDisponibili(p.getGiacenza()) + " di «"
                     + p.getNome() + "»: quantità adeguata.");
         }
         cart.set(id, quantita);
@@ -110,6 +110,11 @@ public class CartService {
             }
         }
         return new Riepilogo(righe, totale, avviso);
+    }
+
+    /** "Disponibile solo 1 pezzo" / "Disponibili solo 5 pezzi": singolare e plurale corretti. */
+    private static String soloDisponibili(int n) {
+        return n == 1 ? "Disponibile solo 1 pezzo" : "Disponibili solo " + n + " pezzi";
     }
 
     /** Quantità valida: intero da 1 a Cart.MAX_QUANTITA. */
