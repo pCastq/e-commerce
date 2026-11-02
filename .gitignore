@@ -1,4 +1,8 @@
-apache-tomcat-10.1.61/
+# Tomcat: si versiona la cartella, ma non cio' che Tomcat genera mentre gira o che deploy.bat ricrea
+apache-tomcat-10.1.61/logs/
+apache-tomcat-10.1.61/temp/
+apache-tomcat-10.1.61/work/
+apache-tomcat-10.1.61/webapps/ecommerce/
 .idea/
 out/
 *.class

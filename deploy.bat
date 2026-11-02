@@ -15,6 +15,21 @@ if not exist "%TOMCAT%\lib\servlet-api.jar" (
     exit /b 1
 )
 
+rem --- cartelle che Tomcat si aspetta ma che non sono nel repository (Git non salva le cartelle vuote) ---
+if not exist "%TOMCAT%\temp" mkdir "%TOMCAT%\temp"
+if not exist "%TOMCAT%\logs" mkdir "%TOMCAT%\logs"
+
+rem --- il driver JDBC di PostgreSQL deve stare in Tomcat\lib (lo usa il pool di connessioni) ---
+if not exist "%TOMCAT%\lib\postgresql-*.jar" (
+    echo Scarico il driver JDBC di PostgreSQL in Tomcat\lib ...
+    curl -L -f -s -o "%TOMCAT%\lib\postgresql-42.7.4.jar" https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.4/postgresql-42.7.4.jar
+    if errorlevel 1 (
+        if exist "%TOMCAT%\lib\postgresql-42.7.4.jar" del "%TOMCAT%\lib\postgresql-42.7.4.jar"
+        echo ERRORE: download non riuscito. Scarica postgresql-42.7.4.jar da https://jdbc.postgresql.org/download/ e mettilo in %TOMCAT%\lib
+        exit /b 1
+    )
+)
+
 echo [1/3] Preparo la cartella temporanea...
 if exist "%STAGE%" rmdir /s /q "%STAGE%"
 mkdir "%STAGE%\WEB-INF\classes"
