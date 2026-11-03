@@ -3,7 +3,7 @@
 Piattaforma e-commerce: Java Servlet + JSP su Apache Tomcat 10.1, PostgreSQL,
 architettura MVC, HTML5/CSS3/JavaScript, AJAX con JSON.
 
-# SMALL DEMO 
+#DEMO 
 https://www.youtube.com/watch?v=GHzE69yeZd8
 
 ## Requisiti
