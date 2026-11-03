@@ -1,7 +1,10 @@
 # ShopTSW – e-commerce (Tecnologie Software per il Web)
 
 Piattaforma e-commerce: Java Servlet + JSP su Apache Tomcat 10.1, PostgreSQL,
-architettura MVC (`control` → `model/service` → `model/dao`), HTML5/CSS3/JavaScript, AJAX con JSON.
+architettura MVC, HTML5/CSS3/JavaScript, AJAX con JSON.
+
+# SMALL DEMO 
+https://www.youtube.com/watch?v=GHzE69yeZd8
 
 ## Requisiti
 
