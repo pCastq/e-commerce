@@ -9,57 +9,91 @@ architettura MVC (`control` → `model/service` → `model/dao`), HTML5/CSS3/Jav
 | Programma | Versione | Note |
 |---|---|---|
 | **JDK** (Java Development Kit) | **21** o superiore | serve il JDK, non solo il JRE (per `javac`). Per esempio Eclipse Temurin: <https://adoptium.net> |
-| **Apache Tomcat** | **10.1.61** | zip "Windows x64": <https://archive.apache.org/dist/tomcat/tomcat-10/v10.1.61/bin/apache-tomcat-10.1.61-windows-x64.zip> |
-| **PostgreSQL** | **18** (va bene anche una versione vicina) | in locale, porta 5432 predefinita. Durante l'installazione si sceglie la **password dell'utente `postgres`**: serve al passo 3 |
+| **Apache Tomcat** | **10.1.61** | già incluso nel progetto (cartella `apache-tomcat-10.1.61`); lo zip serve solo se la cartella manca: zip "Windows x64": <https://archive.apache.org/dist/tomcat/tomcat-10/v10.1.61/bin/apache-tomcat-10.1.61-windows-x64.zip> |
+| **PostgreSQL** | **18** (va bene anche una versione vicina) | in locale, porta 5432 predefinita. Durante l'installazione si sceglie la **password dell'utente `postgres`**: serve al passo 2 |
 
-Non serve installare altro: il driver JDBC di PostgreSQL viene scaricato in automatico da `deploy.bat` (serve internet la prima volta).
+Non serve installare altro: il driver JDBC di PostgreSQL viene scaricato in automatico da `deploy.bat`.
 La porta **8080** deve essere libera.
 
-## Come avviare il progetto (da zero, passo per passo)
+## Installazione passo passo
 
-1. **Scaricare il progetto**: `git clone https://github.com/pCastq/e-commerce` (oppure *Code → Download ZIP* e decomprimerlo).
-   Nei passi seguenti "cartella del progetto" è la cartella `e-commerce` che contiene `deploy.bat`.
-2. **Mettere Tomcat nella cartella del progetto**: decomprimere lo zip di Tomcat in modo che esista la cartella
-   `e-commerce\apache-tomcat-10.1.61\` (dentro ci devono essere `bin`, `lib`, `webapps`...).
-3. **Creare utente e database** (una sola volta): doppio clic su `db\crea_db.bat` (o dal prompt: `db\crea_db.bat`).
-   Chiede la password dell'utente `postgres` scelta durante l'installazione di PostgreSQL.
-4. **Creare le tabelle e i dati di prova**: `db\ricrea_db.bat`. Ripetibile in qualsiasi momento: **cancella tutti i dati** e riparte da zero.
-5. **Compilare e copiare il sito in Tomcat**: `deploy.bat` dalla cartella del progetto.
-   Al primo avvio scarica il driver di PostgreSQL in `apache-tomcat-10.1.61\lib`."
-6. **Dire a Tomcat dov'è Java** (una volta per finestra del prompt, se `JAVA_HOME` non è già impostata):
-   ```bat
-   set JAVA_HOME=C:\Program Files\Eclipse Adoptium\jdk-21.0.x-hotspot
-   ```
-   (il percorso è quello dove è installato il JDK 21).
-7. **Avviare Tomcat**: `apache-tomcat-10.1.61\bin\startup.bat`. Si apre una finestra con il log: attendere la riga
-   `Server startup in [...] milliseconds`.
-8. **Aprire il sito**: <http://localhost:8080/ecommerce/>
+### 1. Scaricare il progetto
+```bash
+git clone https://github.com/pCastq/e-commerce
+cd e-commerce
+```
 
-Per **fermare** Tomcat: `apache-tomcat-10.1.61\bin\shutdown.bat`.
-Dopo ogni modifica al codice basta rieseguire `deploy.bat` (e, se serve, riavviare Tomcat).
+### 2. Creare il database (una sola volta)
+```bat
+db\crea_db.bat
+```
+- Cerca `psql.exe` (nel `PATH` o in `C:\Program Files\PostgreSQL\*\bin`).
+- Chiede la **password dell'utente `postgres`** (quella scelta installando PostgreSQL).
+- Crea l'utente `ecommerce_user` (password `ecommerce`) e il database `ecommerce`, solo se non esistono già.
+
+### 3. Creare le tabelle e i dati di prova
+```bat
+db\ricrea_db.bat
+```
+- Esegue `schema.sql`: elimina e ricrea le tabelle (colonne, tipi, vincoli).
+- Poi esegue `dati_prova.sql`: inserisce i prodotti di prova e l'utente amministratore.
+- **Attenzione:** cancella tutti i dati esistenti. Si può rilanciare per ripartire da zero.
+
+### 4. Compilare e pubblicare il sito
+```bat
+deploy.bat
+```
+- Prepara le cartelle di Tomcat (`temp`, `logs`) e, se manca, scarica il driver di PostgreSQL in `apache-tomcat-10.1.61\lib`
+  (il `.jar` serve a Tomcat per collegarsi al database).
+- Ricrea la cartella di appoggio `out\app`, ci copia tutto il contenuto di `web/` e compila tutti i `.java` di `src/`
+  in `out\app\WEB-INF\classes` (dove Tomcat si aspetta le classi).
+- Copia il risultato (con `robocopy /MIR`, che rispecchia l'origine) in `apache-tomcat-10.1.61\webapps\ecommerce`.
+"
+
+### 5. Avviare Tomcat
+Prima indica dov'è Java (se `JAVA_HOME` non è già impostata):
+```bat
+set JAVA_HOME=C:\Program Files\Eclipse Adoptium\jdk-21.0.x-hotspot
+```
+poi:
+```bat
+apache-tomcat-10.1.61\bin\startup.bat
+```
+(`startup.sh` su Linux/macOS). Aspetta la riga `Server startup in [...] milliseconds` e apri **<http://localhost:8080/ecommerce/>**.
+Per fermarlo: `apache-tomcat-10.1.61\bin\shutdown.bat`.
+
+Dopo ogni modifica al codice: `deploy.bat` e, se serve, riavviare Tomcat.
 
 ## Account di prova
 
-- **Amministratore**: `admin@email.it` / `Admin2026!` (accede all'area `/admin`: prodotti e ordini)
-- **Clienti**: ci si registra dalla pagina *Registrati* (la password richiede maiuscola, minuscola, cifra e un simbolo tra `. , _ - ! ? @`, minimo 8 caratteri).
+- **Amministratore:** `admin@email.it` / `Admin2026!` (area `/admin`: prodotti e ordini)
+- **Clienti:** ci si registra dalla pagina *Registrati*.
 
-Le credenziali del database (`ecommerce_user` / `ecommerce`) sono in `web/META-INF/context.xml` e in `db/crea_db.sql`: sono solo per lo sviluppo.
+Credenziali del database (`ecommerce_user` / `ecommerce`): in `web/META-INF/context.xml`. Solo per sviluppo.
+
+## Immagini dei prodotti
+
+Nel database si salva **solo il nome del file** (es. `detersivo.jpg`). Il file deve stare in `web/img/prodotti/` con lo stesso nome.
+Le JSP compongono l'indirizzo, e il browser scarica l'immagine direttamente da Tomcat:
+```jsp
+<img src="${pageContext.request.contextPath}/img/prodotti/<c:out value='${prodotto.immagineFile}'/>">
+```
+Se il prodotto non ha immagine, si mostra `nessuna.svg`. Per un nuovo prodotto: copiare il file in `web/img/prodotti/`, rilanciare `deploy.bat` e poi inserire il nome nel form admin.
 
 ## Se qualcosa non funziona
 
 | Sintomo | Causa probabile |
 |---|---|
-| `Neither the JAVA_HOME nor the JRE_HOME environment variable is defined` | passo 6: impostare `JAVA_HOME` sul JDK 21 |
-| `deploy.bat`: `ERRORE: Tomcat non trovato` | la cartella `apache-tomcat-10.1.61` non è dentro la cartella del progetto (passo 2) |
-| `deploy.bat`: errore di compilazione, `release 21 non supportata` | JDK più vecchio del 21 |
-| `psql non trovato` | PostgreSQL non installato o non nel `PATH`: reinstallare o aggiungere la cartella `bin` di PostgreSQL al `PATH` |
-| `crea_db.bat`: autenticazione fallita | password dell'utente `postgres` sbagliata |
-| Il sito risponde con errore 500 / pagina di errore | PostgreSQL spento, database non creato (passi 3-4) o driver mancante in `apache-tomcat-10.1.61\lib` |
-| `Address already in use` all'avvio di Tomcat | la porta 8080 è occupata da un altro programma (o Tomcat è già avviato) |
+| `Neither the JAVA_HOME nor the JRE_HOME ...` | impostare `JAVA_HOME` sul JDK 21 (passo 5) |
+| `psql non trovato` | PostgreSQL non installato o non nel `PATH` |
+| `crea_db.bat`: autenticazione fallita | password di `postgres` sbagliata |
+| Errore 500 / pagina di errore | PostgreSQL spento, database non creato (passi 2-3) o driver mancante in `lib` |
+| `Address already in use` | porta 8080 occupata, o Tomcat già avviato |
+| Errore di compilazione con `release 21` | JDK più vecchio del 21 |
 
 ## Struttura
 
-- `src/control` servlet (solo HTTP) · `src/model` bean · `src/model/service` logica di business · `src/model/dao` accesso al database
-- `src/filter` filtri (codifica, login, area admin) · `src/util` classi di supporto
+- `src/control` servlet (solo HTTP) · `src/model` bean · `src/model/service` logica · `src/model/dao` accesso al database
+- `src/filter` filtri · `src/util` classi di supporto
 - `web/WEB-INF/views` pagine JSP · `web/WEB-INF/fragments` header, menu, footer · `web/css`, `web/js`, `web/img`
-- `db/` script e SQL del database · `deploy.bat` compila e copia in Tomcat
+- `db/` script SQL e `.bat` del database · `deploy.bat` compila e pubblica in Tomcat
